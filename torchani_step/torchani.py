@@ -3,6 +3,7 @@
 """Non-graphical part of the TorchANI step in a SEAMM flowchart
 """
 
+import json
 import logging
 from pathlib import Path
 import pkg_resources
@@ -66,7 +67,7 @@ class TorchANI(seamm.Node):
         title="TorchANI",
         namespace="org.molssi.seamm.torchani",
         extension=None,
-        logger=logger
+        logger=logger,
     ):
         """A step for TorchANI in a SEAMM flowchart.
 
@@ -93,9 +94,7 @@ class TorchANI(seamm.Node):
         """
         logger.debug(f"Creating TorchANI {self}")
         self.subflowchart = seamm.Flowchart(
-            parent=self,
-            name="TorchANI",
-            namespace=namespace
+            parent=self, name="TorchANI", namespace=namespace
         )  # yapf: disable
 
         super().__init__(
@@ -117,6 +116,7 @@ class TorchANI(seamm.Node):
     def git_revision(self):
         """The git version of this module."""
         return torchani_step.__git_revision__
+
     def set_id(self, node_id):
         """Set the id for node to a given tuple"""
         self._id = node_id
@@ -151,21 +151,19 @@ class TorchANI(seamm.Node):
             try:
                 text += __(node.description_text(), indent=3 * " ").__str__()
             except Exception as e:
-                print(
-                    f"Error describing torchani flowchart: {e} in {node}"
-                )
-                logger.critical(
-                    f"Error describing torchani flowchart: {e} in {node}"
-                )
+                print(f"Error describing torchani flowchart: {e} in {node}")
+                logger.critical(f"Error describing torchani flowchart: {e} in {node}")
                 raise
             except:  # noqa: E722
                 print(
-                    "Unexpected error describing torchani flowchart: {} in {}"
-                    .format(sys.exc_info()[0], str(node))
+                    "Unexpected error describing torchani flowchart: {} in {}".format(
+                        sys.exc_info()[0], str(node)
+                    )
                 )
                 logger.critical(
-                    "Unexpected error describing torchani flowchart: {} in {}"
-                    .format(sys.exc_info()[0], str(node))
+                    "Unexpected error describing torchani flowchart: {} in {}".format(
+                        sys.exc_info()[0], str(node)
+                    )
                 )
                 raise
             text += "\n"
@@ -185,25 +183,46 @@ class TorchANI(seamm.Node):
         seamm.Node
             The next node object in the flowchart.
         """
-        next_node = super().run(printer)
-        # Get the first real node
-        node = self.subflowchart.get_node("1").next()
+        # Create the directory
+        directory = Path(self.directory)
+        directory.mkdir(parents=True, exist_ok=True)
 
-        input_data = []
+        # Print our header to the main output
+        printer.important(self.header)
+        printer.important("")
+
+        next_node = super().run(printer)
+
+        # Get the first real node
+        node1 = self.subflowchart.get_node("1").next()
+
+        # Print what we will do as we get the input
+        schema = {}
+        node = node1
         while node is not None:
-            keywords = node.get_input()
-            input_data.append(" ".join(keywords))
+            schema = node.get_input(schema)
+            for value in node.description:
+                printer.important(value)
+                printer.important(" ")
             node = node.next()
 
-        files = {"molssi.dat": "\n".join(input_data)}
-        logger.info("molssi.dat:\n" + files["molssi.dat"])
+        files = {"cms_schema_input.json": json.dumps(schema, indent=4)}
+        logger.info("cms_schema_input:\n" + files["cms_schema_input.json"])
+
+        # Output files locally
+        for filename in files:
+            path = directory / filename
+            mode = "wb" if type(files[filename]) is bytes else "w"
+            with open(path, mode) as fd:
+                fd.write(files[filename])
 
         local = seamm.ExecLocal()
         result = local.run(
-            cmd=["TorchANI", "-in", "molssi.dat"],
+            cmd=["TorchANI", "cms_schema_input.json"],
             files=files,
-            return_files=[]
-        )  # yapf: disable
+            return_files=["cms_schema_output.json"],
+            in_situ=True,
+        )
 
         if result is None:
             logger.error("There was an error running TorchANI")
@@ -216,7 +235,8 @@ class TorchANI(seamm.Node):
             logger.warning("stderr:\n" + result["stderr"])
 
         # Analyze the results
-        self.analyze()
+        # self.analyze()
+
         # Add other citations here or in the appropriate place in the code.
         # Add the bibtex to data/references.bib, and add a self.reference.cite
         # similar to the above to actually add the citation to the references.

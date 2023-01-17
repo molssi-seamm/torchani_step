@@ -83,5 +83,13 @@ setup(
         'org.molssi.seamm.tk': [
             'TorchANI = torchani_step:TorchANIStep',
         ],
-    }
+        'org.molssi.seamm.torchani': [
+            'Optimization = torchani_step:OptimizationStep',
+            'Energy = torchani_step:EnergyStep',
+        ],
+        'org.molssi.seamm.torchani.tk': [
+            'Optimization = torchani_step:OptimizationStep',
+            'Energy = torchani_step:EnergyStep',
+        ],
+    },
 )

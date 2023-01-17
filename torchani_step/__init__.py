@@ -14,6 +14,16 @@ from .tk_torchani import TkTorchANI  # noqa: F401, E501
 
 from .metadata import metadata  # noqa: F401
 
+from .energy_step import EnergyStep  # noqa: F401
+from .energy import Energy  # noqa: F401
+from .energy_parameters import EnergyParameters  # noqa: F401
+from .tk_energy import TkEnergy  # noqa: F401
+
+from .optimization_step import OptimizationStep  # noqa: F401
+from .optimization import Optimization  # noqa: F401
+from .optimization_parameters import OptimizationParameters  # noqa: F401
+from .tk_optimization import TkOptimization  # noqa: F401
+
 # Handle versioneer
 from ._version import get_versions
 

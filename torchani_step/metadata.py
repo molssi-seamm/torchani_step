@@ -35,8 +35,37 @@ only if appropriate for this code. For example::
         },
     }
 """
-# metadata["computational models"] = {
-# }
+metadata["computational models"] = {
+    "ML": {
+        "models": {
+            "ANI": {
+                "parameterizations": {
+                    "ANI-1x": {
+                        "elements": "1,6-8",
+                        "periodic": True,
+                        "reactions": True,
+                        "optimization": True,
+                        "code": "torchani",
+                    },
+                    "ANI-1ccx": {
+                        "elements": "1,6-8",
+                        "periodic": True,
+                        "reactions": True,
+                        "optimization": True,
+                        "code": "torchani",
+                    },
+                    "ANI-2x": {
+                        "elements": "1,6-9,16-17",
+                        "periodic": True,
+                        "reactions": True,
+                        "optimization": True,
+                        "code": "torchani",
+                    },
+                },
+            },
+        },
+    },
+}
 
 """Description of the TorchANI keywords.
 
