@@ -74,11 +74,12 @@ class Installer(seamm_installer.InstallerBase):
         local_path = self.resource_path.parent
 
         # Copy the python file, adjusting the python path
-        lines = (local_path / "SEAMM_TorchANI.py").read_text().splitlines()
+        lines = (local_path / "SEAMM_TorchANI.py_template").read_text().splitlines()
         lines[0] = f"#!{path}"
 
-        path.write_text("\n".join(lines))
-        path.chmod(0o755)
+        new_path = bin_path / "SEAMM_TorchANI.py"
+        new_path.write_text("\n".join(lines))
+        new_path.chmod(0o755)
 
     def exe_version(self, path):
         """Get the version of the TorchANI executable.
