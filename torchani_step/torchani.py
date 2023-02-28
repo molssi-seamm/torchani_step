@@ -13,7 +13,8 @@ import sys
 import torchani_step
 import molsystem
 import seamm
-from seamm_util import ureg, Q_  # noqa: F401
+import seamm_util
+from seamm_util import ureg, Q_, CompactJSONEncoder  # noqa: F401
 import seamm_util.printing as printing
 from seamm_util.printing import FormattedText as __
 
@@ -106,6 +107,7 @@ class TorchANI(seamm.Node):
         )  # yapf: disable
 
         self._metadata = torchani_step.metadata
+        self.parameters = torchani_step.TorchANIParameters()
 
     @property
     def version(self):
@@ -125,6 +127,37 @@ class TorchANI(seamm.Node):
         self.subflowchart.set_ids(self._id)
 
         return self.next()
+
+    def create_parser(self):
+        """Setup the command-line / config file parser"""
+        parser_name = self.step_type
+        parser = seamm_util.getParser(name="SEAMM")
+
+        # Remember if the parser exists ... this type of step may have been
+        # found before
+        parser_exists = parser.exists(parser_name)
+
+        # Create the standard options, e.g. log-level
+        result = super().create_parser(name=parser_name)
+
+        if parser_exists:
+            return result
+
+        # Options for TorchANI
+        parser.add_argument(
+            parser_name,
+            "--torchani-path",
+            default="",
+            help="the path to the DFTB+ executable",
+        )
+        parser.add_argument(
+            parser_name,
+            "--torchani-exe",
+            default="SEAMM_TorchANI.py",
+            help="the name of the TorchANI executable of script",
+        )
+
+        return result
 
     def description_text(self, P=None):
         """Create the text description of what this step will do.
@@ -191,6 +224,17 @@ class TorchANI(seamm.Node):
         printer.important(self.header)
         printer.important("")
 
+        # Access the options and find the executable
+        options = self.options
+
+        if options["torchani_path"] == "":
+            torchani_exe = seamm_util.check_executable(options["torchani_exe"])
+        else:
+            torchani_exe = (
+                Path(options["torchani_path"]).expanduser().resolve()
+                / options["torchani_exe"]
+            )
+
         next_node = super().run(printer)
 
         # Get the first real node
@@ -199,29 +243,39 @@ class TorchANI(seamm.Node):
         # Print what we will do as we get the input
         schema = {}
         node = node1
+        nodes = []
         while node is not None:
+            nodes.append(node)
             schema = node.get_input(schema)
             for value in node.description:
                 printer.important(value)
                 printer.important(" ")
             node = node.next()
 
-        files = {"cms_schema_input.json": json.dumps(schema, indent=4)}
-        logger.info("cms_schema_input:\n" + files["cms_schema_input.json"])
+        schema_name = schema["schema name"]
+        schema_version = schema["schema version"]
+        input_data = f"!MolSSI {schema_name} {schema_version}\n"
+        input_data += json.dumps(
+            schema, indent=4, cls=CompactJSONEncoder, sort_keys=True
+        )
+        files = {"input.json": input_data}
+        logger.info("input.json:\n" + files["input.json"])
 
         # Output files locally
-        for filename in files:
+        for filename, data in files.items():
             path = directory / filename
-            mode = "wb" if type(files[filename]) is bytes else "w"
+            mode = "wb" if type(data) is bytes else "w"
             with open(path, mode) as fd:
-                fd.write(files[filename])
+                fd.write(data)
 
         local = seamm.ExecLocal()
         result = local.run(
-            cmd=["TorchANI", "cms_schema_input.json"],
+            cmd=f"{torchani_exe} input.json",
             files=files,
-            return_files=["cms_schema_output.json"],
+            return_files=["output.json"],
+            shell=True,
             in_situ=True,
+            directory=directory,
         )
 
         if result is None:
@@ -232,37 +286,69 @@ class TorchANI(seamm.Node):
 
         logger.info("stdout:\n" + result["stdout"])
         if result["stderr"] != "":
-            logger.warning("stderr:\n" + result["stderr"])
+            lines = result["stderr"].splitlines()
+            tmp = []
+            for line in lines:
+                if "cuaev not installed" in line:
+                    continue
+                if "Creating a tensor from a list of numpy" in line:
+                    continue
+                if "cell = torch.tensor(self.atoms.get_cell(complete=True)" in line:
+                    continue
+                tmp.append(line)
+            if len(tmp) > 0:
+                logger.warning("stderr:\n" + "\n".join(tmp))
 
-        # Analyze the results
-        # self.analyze()
+        lines = result["output.json"]["data"].splitlines()
+        line = lines[0]
+        if line[0:7] != "!MolSSI":
+            raise RuntimeError(
+                "Output file is not a MolSSI schema file, organization is not MolSSI: "
+                f"'{line}'"
+            )
+        tmp = line.split()
+        if len(tmp) < 3:
+            raise RuntimeError(f"Output file is not a MolSSI schema file: '{line}'")
+        if tmp[1] != "cms_schema":
+            raise RuntimeError(f"Output file is not a CMS schema file: '{line}'")
+
+        schema = json.loads("\n".join(lines[1:]))
+
+        # Check that the job ran OK
+        for step_no, step in enumerate(schema["workflow"]):
+            if "success" not in step:
+                self.logger.warning(f"Step {step_no} did not run")
+                continue
+            if step["success"]:
+                nodes[step_no].analyze(schema=schema, step_no=step_no)
+            else:
+                if "error" in step:
+                    self.logger.error("TorchANI had an error:\n\n" + step["error"])
+                    raise RuntimeError("TorchANI had an error:\n\n" + step["error"])
 
         # Add other citations here or in the appropriate place in the code.
         # Add the bibtex to data/references.bib, and add a self.reference.cite
         # similar to the above to actually add the citation to the references.
+        self.references.cite(
+            raw=self._bibliography["TorchANI"],
+            alias="TorchANI",
+            module="torchani_step",
+            level=1,
+            note="The citation for the TorchANI software.",
+        )
+        self.references.cite(
+            raw=self._bibliography["ANI"],
+            alias="ANI",
+            module="torchani_step",
+            level=1,
+            note="The citation for the ANI ML.",
+        )
+        self.references.cite(
+            raw=self._bibliography["ANI_dataset"],
+            alias="ANI_dataset",
+            module="torchani_step",
+            level=2,
+            note="The citation for the ANI dataset.",
+        )
 
         return next_node
-
-    def analyze(self, indent="", **kwargs):
-        """Do any analysis of the output from this step.
-
-        Also print important results to the local step.out file using
-        "printer".
-
-        Parameters
-        ----------
-        indent: str
-            An extra indentation for the output
-        """
-        # Get the first real node
-        node = self.subflowchart.get_node("1").next()
-
-        # Loop over the subnodes, asking them to do their analysis
-        while node is not None:
-            for value in node.description:
-                printer.important(value)
-                printer.important(" ")
-
-            node.analyze()
-
-            node = node.next()

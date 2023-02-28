@@ -1,0 +1,397 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import argparse
+import json
+import logging
+from pathlib import Path
+import traceback
+
+import ase
+import ase.optimize
+import torch
+import torchani
+
+logger = logging.getLogger(__name__)
+
+atno = {
+    "H": 1,
+    "C": 6,
+    "N": 7,
+    "O": 8,
+    "F": 9,
+    "S": 16,
+    "Cl": 17,
+}
+
+
+class CompactJSONEncoder(json.JSONEncoder):
+    """A JSON Encoder that puts small containers on single lines."""
+
+    CONTAINER_TYPES = (list, tuple, dict)
+    """Container datatypes include primitives or other containers."""
+
+    MAX_WIDTH = 80
+    """Maximum width of a container that might be put on a single line."""
+
+    MAX_ITEMS = 4
+    """Maximum number of items in container that might be put on single line."""
+
+    def __init__(self, *args, **kwargs):
+        # using this class without indentation is pointless
+        if kwargs.get("indent") is None:
+            kwargs["indent"] = 4
+        super().__init__(*args, **kwargs)
+        self.indentation_level = 0
+
+    def encode(self, o):
+        """Encode JSON object *o* with respect to single line lists."""
+        if isinstance(o, (list, tuple)):
+            return self._encode_list(o)
+        if isinstance(o, dict):
+            return self._encode_object(o)
+        if isinstance(o, float):  # Use scientific notation for floats
+            return format(o, ".12g")
+        return json.dumps(
+            o,
+            skipkeys=self.skipkeys,
+            ensure_ascii=self.ensure_ascii,
+            check_circular=self.check_circular,
+            allow_nan=self.allow_nan,
+            sort_keys=self.sort_keys,
+            indent=self.indent,
+            separators=(self.item_separator, self.key_separator),
+            default=self.default if hasattr(self, "default") else None,
+        )
+
+    def _encode_list(self, o):
+        if self._put_on_single_line(o):
+            return "[" + ", ".join(self.encode(el) for el in o) + "]"
+        self.indentation_level += 1
+        output = [self.indent_str + self.encode(el) for el in o]
+        self.indentation_level -= 1
+        return "[\n" + ",\n".join(output) + "\n" + self.indent_str + "]"
+
+    def _encode_object(self, o):
+        if not o:
+            return "{}"
+        if self._put_on_single_line(o):
+            return (
+                "{ "
+                + ", ".join(
+                    f"{self.encode(k)}: {self.encode(el)}" for k, el in o.items()
+                )
+                + " }"
+            )
+        self.indentation_level += 1
+        output = [
+            f"{self.indent_str}{json.dumps(k)}: {self.encode(v)}" for k, v in o.items()
+        ]
+
+        self.indentation_level -= 1
+        return "{\n" + ",\n".join(output) + "\n" + self.indent_str + "}"
+
+    def iterencode(self, o, **kwargs):
+        """Required to also work with `json.dump`."""
+        return self.encode(o)
+
+    def _put_on_single_line(self, o):
+        return (
+            self._primitives_only(o)
+            and len(o) <= self.MAX_ITEMS
+            and len(str(o)) - 2 <= self.MAX_WIDTH
+        )
+
+    def _primitives_only(self, o: list | tuple | dict):
+        if isinstance(o, (list, tuple)):
+            return not any(isinstance(el, self.CONTAINER_TYPES) for el in o)
+        elif isinstance(o, dict):
+            return not any(isinstance(el, self.CONTAINER_TYPES) for el in o.values())
+
+    @property
+    def indent_str(self) -> str:
+        if isinstance(self.indent, int):
+            return " " * (self.indentation_level * self.indent)
+        elif isinstance(self.indent, str):
+            return self.indentation_level * self.indent
+        else:
+            raise ValueError(
+                f"indent must either be of type int or str (is: {type(self.indent)})"
+            )
+
+
+class TorchANI:
+    def __init__(self, logger=logger):
+        self.logger = logger
+        self.options = None
+        self.schema = None
+
+    def run(self):
+        """Optimize the structure use ASE & TorchANI given the input schema."""
+        # Work out device
+        if self.options["device"] == "cpu":
+            hardware = "cpu"
+        elif not torch.cuda.is_available():
+            hardware = "cpu"
+        else:
+            # Need to add handling of default!
+            hardware = "cuda"
+        device = torch.device(hardware)
+
+        schema = self.schema
+        for step_no, step in enumerate(schema["workflow"]):
+            # Get the Torch model
+            model_definition = step["model"]
+            model = model_definition["model"]
+            if model != "ANI":
+                raise RuntimeError(f"The requested model is not ANI: '{model}.'")
+            parameterization = model_definition["parameterization"]
+
+            optimize = "optimized structure" in step["required results"]
+            need_gradients = optimize or "derivatives" in step["required results"]
+
+            if parameterization == "ANI-1x":
+                torch_model = torchani.models.ANI1x(periodic_table_index=True).to(
+                    device
+                )
+                covered_elements = {"C", "H", "N", "O"}
+            elif parameterization == "ANI-1ccx":
+                torch_model = torchani.models.ANI1ccx(periodic_table_index=True).to(
+                    device
+                )
+                covered_elements = {"C", "H", "N", "O"}
+            elif parameterization == "ANI-2x":
+                torch_model = torchani.models.ANI2x(periodic_table_index=True).to(
+                    device
+                )
+                covered_elements = {"C", "H", "N", "O", "F", "S", "Cl"}
+            else:
+                raise RuntimeError(f"Don't recognize ANI model '{parameterization}'.")
+
+            # And the molecule to Torch tensors
+            atnos = []
+            XYZ = []
+            for system in schema["systems"]:
+                for configuration in system["configurations"]:
+                    elements = set(configuration["symbols"])
+                    if not elements <= covered_elements:
+                        raise RuntimeError(
+                            f"The {parameterization} parameterization covers the "
+                            f" elements {sorted(covered_elements)}. The system has "
+                            f"{sorted(elements)}."
+                        )
+                    if configuration["periodicity"] != 0:
+                        raise NotImplementedError(
+                            "TorchANI does not handle periodic systems yet."
+                        )
+                    coords = configuration["coordinates"]
+                    if coords["units"] != "Å":
+                        raise RuntimeError("TorchANI expects coordinates in Å")
+                    if coords["coordinate system"] != "Cartesian":
+                        raise NotImplementedError(
+                            f"TorchANI does not handle {coords['coordinate system']} "
+                            "coordinates yet."
+                        )
+
+                    XYZ.append(coords["coordinates"])
+                    atnos.append([atno[symbol] for symbol in configuration["symbols"]])
+            coordinates = torch.tensor(XYZ, requires_grad=need_gradients, device=device)
+            species = torch.tensor(atnos, device=device)
+
+            if optimize:
+                print("Running structure optimization!")
+                atoms = ase.Atoms(
+                    configuration["symbols"], positions=coords["coordinates"]
+                )
+                calculator = torch_model.ase()
+                atoms.set_calculator(calculator)
+                parameters = schema["control parameters"]["optimization"]
+                minimizer = parameters["minimizer"]
+                if minimizer == "BFGS":
+                    minimizer = ase.optimize.BFGS(atoms)
+                elif minimizer == "LBFGS":
+                    minimizer = ase.optimize.LBFGS(atoms)
+                elif minimizer == "BFGS using linesearch":
+                    minimizer = ase.optimize.BFGSLineSearch(atoms)
+                elif minimizer == "LBFGS using linesearch":
+                    minimizer = ase.optimize.LBFGSLineSearch(atoms)
+                elif minimizer == "Gaussian Process minimizer":
+                    minimizer = ase.optimize.GPMin(atoms)
+                elif minimizer == "FIRE":
+                    minimizer = ase.optimize.FIRE(atoms)
+                elif minimizer == "MD minimizer":
+                    minimizer = ase.optimize.MDMin(atoms)
+                else:
+                    raise RuntimeError(f"Don't know minimizer '{minimizer}'")
+
+                fmax = parameters["convergence"]
+                max_steps = parameters["maximum steps"]
+                print("Begin minimizing...")
+                try:
+                    minimizer.run(fmax=fmax, steps=max_steps)
+                except Exception as e:
+                    print("Optimization failed!\n")
+                    step["success"] = False
+                    step["error"] = traceback.format_exception(e)
+                    traceback.print_exception(e)
+                else:
+                    print("Optimization succeeded!\n")
+                    step["success"] = True
+                    for system in schema["systems"]:
+                        for configuration in system["configurations"]:
+                            if "results" not in configuration:
+                                configuration["results"] = {
+                                    "provenance": {
+                                        "creator": "SEAMM/TorchANI",
+                                        "version": "1.0",
+                                        "routine": "TorchANI.run",
+                                    },
+                                    "data": [],
+                                }
+                            results = {}
+                            results[
+                                "number of optimization steps"
+                            ] = minimizer.get_number_of_steps()
+                            results["total energy"] = atoms.get_potential_energy()
+                            results["coordinates"] = atoms.get_positions().tolist()
+                            results["derivatives"] = atoms.get_forces().tolist()
+
+                            configuration["results"]["data"].append(results)
+            else:
+                print("Calculating the single-point energy!")
+                energies = []
+                derivatives = []
+                try:
+                    for i, submodel in enumerate(torch_model):
+                        _, energy = submodel((species, coordinates))
+                        energies.append(energy)
+                        if need_gradients:
+                            derivative = torch.autograd.grad(energy.sum(), coordinates)
+                            derivatives.append(derivative)
+                except Exception as e:
+                    step["success"] = False
+                    step["error"] = traceback.format_exception(e)
+                    traceback.print_exception(e)
+                else:
+                    step["success"] = True
+
+                    # Process the results back into the schema
+                    i = -1
+                    for system in schema["systems"]:
+                        for configuration in system["configurations"]:
+                            i += 1
+                            if "results" not in configuration:
+                                configuration["results"] = {
+                                    "provenance": {
+                                        "creator": "SEAMM/TorchANI",
+                                        "version": "1.0",
+                                        "routine": "TorchANI.run",
+                                    },
+                                    "data": [],
+                                }
+                            results = {}
+
+                            # Now let's compute energy and force:
+                            Es = []
+                            dEs = []
+                            E_list = torch.zeros((8,), dtype=torch.float64)
+                            dE_list = []
+
+                            indx = 0
+                            for energy, derivative in zip(energies, derivatives):
+                                Es.append(energy[i].item())
+                                E_list[indx] = energy[i]
+                                indx += 1
+                                if need_gradients:
+                                    dEs.append(derivative[i].tolist())
+                                    dE_list.append(derivative[i])
+                            if need_gradients:
+                                dE_stack = torch.stack(dE_list)
+
+                            E = E_list.mean().item()
+                            E_stdev = E_list.std().item()
+
+                            results["all total energies"] = Es
+                            results["total energy"] = E
+                            if need_gradients:
+                                results["all derivatives"] = dEs
+                                results["total energy, stdev"] = E_stdev
+
+                            if need_gradients:
+                                dE = dE_stack.mean(dim=0).tolist()
+                                dE_stdev = dE_stack.std(dim=0).tolist()
+                                results["derivatives"] = dE
+                                results["derivatives, stdev"] = dE_stdev
+
+                            configuration["results"]["data"].append(results)
+
+    def parse_cmdline(self):
+        """Parse the command line into the options."""
+
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument(
+            "-V",
+            "--version",
+            action="version",
+            version="SEAMM-TorchANI 1.0",
+        )
+        parser.add_argument(
+            "--log-level",
+            default="WARNING",
+            type=str.upper,
+            choices=["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            help=("The level of informational output, defaults to " "'%(default)s'"),
+        )
+        parser.add_argument("schema-file", help="The input schema file")
+        parser.add_argument(
+            "-d",
+            "--device",
+            default="default",
+            type=str.lower,
+            choices=["default", "gpu", "cpu"],
+            help=(
+                "Whether to run on gpu, cpu, or default based on system size. "
+                "Default: '%(default)s'"
+            ),
+        )
+
+        # Parse the command line
+        self.options = vars(parser.parse_args())
+
+        # Set up the logging
+        level = self.options["log_level"]
+        logging.basicConfig(level=level)
+        # Don't know why basicConfig doesn't seem to work!
+        self.logger.setLevel(level)
+        self.logger.info(f"Logging level is {level}")
+
+    def read_schema(self):
+        """Read the input schema."""
+        path = Path(self.options["schema-file"]).expanduser().resolve()
+        with path.open() as fd:
+            line = fd.readline()
+            if line[0:7] != "!MolSSI":
+                raise RuntimeError(f"Input file is not a MolSSI schema file: '{line}'")
+            tmp = line.split()
+            if len(tmp) < 3:
+                raise RuntimeError(f"Input file is not a MolSSI schema file: '{line}'")
+            if tmp[1] != "cms_schema":
+                raise RuntimeError(f"Input file is not a CMS schema file: '{line}'")
+            self.schema = json.load(fd)
+
+    def write_schema(self, path=Path("output.json")):
+        """Write the output schema."""
+        schema_name = self.schema["schema name"]
+        schema_version = self.schema["schema version"]
+        with path.open("w") as fd:
+            fd.writelines(f"!MolSSI {schema_name} {schema_version}\n")
+            json.dump(self.schema, fd, indent=4, cls=CompactJSONEncoder, sort_keys=True)
+
+
+if __name__ == "__main__":
+    ani = TorchANI()
+    ani.parse_cmdline()
+    ani.read_schema()
+    ani.run()
+    ani.write_schema()

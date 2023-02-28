@@ -1,0 +1,7 @@
+name: seamm-torchani
+channels:
+  - conda-forge
+dependencies:
+  - ase
+  - python
+  - torchani

@@ -4,14 +4,14 @@
 
 import pprint  # noqa: F401
 import tkinter as tk
+import tkinter.ttk as ttk
 
 import torchani_step  # noqa: F401
-import seamm
 from seamm_util import ureg, Q_, units_class  # noqa: F401
 import seamm_widgets as sw
 
 
-class TkOptimization(seamm.TkNode):
+class TkOptimization(torchani_step.TkEnergy):
     """
     The graphical part of a Optimization step in a flowchart.
 
@@ -91,7 +91,7 @@ class TkOptimization(seamm.TkNode):
             h=h,
         )
 
-    def create_dialog(self):
+    def create_dialog(self, title="TorchANI Optimization"):
         """
         Create the dialog. A set of widgets will be chosen by default
         based on what is specified in the Optimization_parameters
@@ -110,78 +110,80 @@ class TkOptimization(seamm.TkNode):
         TkOptimization.reset_dialog
         """
 
-        frame = super().create_dialog(title="Optimization")
+        super().create_dialog(title=title)
 
         # Shortcut for parameters
         P = self.node.parameters
 
-        # Then create the widgets
-        for key in P:
-            if key[0] != "_" and key not in (
-                "results",
-                "extra keywords",
-                "create tables",
-            ):
-                self[key] = P[key].widget(frame)
+        # Frame to isolate widgets
+        opt_frame = self["optimization frame"] = ttk.LabelFrame(
+            self["frame"],
+            borderwidth=4,
+            relief="sunken",
+            text="Optimization Parameters",
+            labelanchor="n",
+            padding=10,
+        )
 
-        # and lay them out
-        self.reset_dialog()
+        for key in torchani_step.OptimizationParameters.parameters:
+            if key not in ("structure handling", "configuration name"):
+                self[key] = P[key].widget(opt_frame)
+
+        for key in ("minimizer",):
+            self[key].bind("<<ComboboxSelected>>", self.reset_dialog)
+            self[key].bind("<Return>", self.reset_dialog)
+            self[key].bind("<FocusOut>", self.reset_dialog)
+
+        # Create the structure-handling widgets
+        sframe = self["structure frame"] = ttk.LabelFrame(
+            self["frame"], text="Configuration Handling", labelanchor=tk.N
+        )
+        row = 0
+        widgets = []
+        for key in ("structure handling", "system name", "configuration name"):
+            self[key] = P[key].widget(sframe)
+            self[key].grid(row=row, column=0, sticky=tk.EW)
+            widgets.append(self[key])
+            row += 1
+        sw.align_labels(widgets, sticky=tk.E)
+
+        opt_frame.grid(row=0, column=1)
+        sframe.grid(row=1, column=0, columnspan=2)
 
     def reset_dialog(self, widget=None):
-        """Layout the widgets in the dialog.
+        super().reset_dialog()
 
-        The widgets are chosen by default from the information in
-        Optimization_parameter.
+        row = 0
+        self["optimization frame"].grid(row=row, column=1, sticky=tk.EW)
+        row += 1
+        self["structure frame"].grid(row=row, column=0, columnspan=2)
+        row += 1
 
-        This function simply lays them out row by row with
-        aligned labels. You may wish a more complicated layout that
-        is controlled by values of some of the control parameters.
-        If so, edit or override this method
+        # And the widgets in our frame
+        self.reset_optimization_frame()
 
-        Parameters
-        ----------
-        widget : Tk Widget = None
+        return row
 
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        TkOptimization.create_dialog
-        """
-
-        # Remove any widgets previously packed
-        frame = self["frame"]
+    def reset_optimization_frame(self):
+        """Layout the optimization frame according to the current values."""
+        frame = self["optimization frame"]
         for slave in frame.grid_slaves():
             slave.grid_forget()
 
-        # Shortcut for parameters
-        P = self.node.parameters
-
-        # keep track of the row in a variable, so that the layout is flexible
-        # if e.g. rows are skipped to control such as "method" here
-        row = 0
         widgets = []
-        for key in P:
-            if key[0] != "_" and key not in (
-                "results",
-                "extra keywords",
-                "create tables",
-            ):
-                self[key].grid(row=row, column=0, sticky=tk.EW)
-                widgets.append(self[key])
-                row += 1
 
-        # Align the labels
+        row = 0
+
+        for key in ("minimizer", "max steps", "convergence"):
+            self[key].grid(row=row, column=0, columnspan=3, sticky=tk.W)
+            widgets.append(self[key])
+            row += 1
+
         sw.align_labels(widgets, sticky=tk.E)
 
-        # Setup the results if there are any
-        have_results = (
-            "results" in self.node.metadata and len(self.node.metadata["results"]) > 0
-        )
-        if have_results and "results" in P:
-            self.setup_results()
+        frame.columnconfigure(0, minsize=50)
+
+        return row
 
     def right_click(self, event):
         """

@@ -10,6 +10,7 @@ A SEAMM plug-in for TorchANI
 
 from .torchani import TorchANI  # noqa: F401, E501
 from .torchani_step import TorchANIStep  # noqa: F401, E501
+from .torchani_parameters import TorchANIParameters  # noqa: F401
 from .tk_torchani import TkTorchANI  # noqa: F401, E501
 
 from .metadata import metadata  # noqa: F401

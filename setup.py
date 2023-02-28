@@ -77,7 +77,10 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     entry_points={
-        'org.molssi.seamm': [
+        'console_scripts': [
+            'torchani-step-installer=torchani_step.__main__:run',
+        ],
+       'org.molssi.seamm': [
             'TorchANI = torchani_step:TorchANIStep',
         ],
         'org.molssi.seamm.tk': [
