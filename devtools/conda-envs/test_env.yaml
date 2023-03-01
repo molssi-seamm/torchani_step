@@ -10,6 +10,7 @@ dependencies:
 
   # SEAMM
   - seamm
+  - tabulate
 
   # Testing
   - black
@@ -19,11 +20,11 @@ dependencies:
   - pytest-cov
 
   # Documentation
-  - pygments
-  
+  - pydata-sphinx-theme==0.12.0
+  - sphinx-design
+
   # Pip-only installs
   - pip:
     # Documentation
-    - rinohtype
-    - sphinx-rtd-theme
-    - pystemmer
+    - sphinx-copybutton
+    - sphinxnotes-strike

@@ -50,7 +50,7 @@ class Installer(seamm_installer.InstallerBase):
 
         self.section = "torchani-step"
         self.path_name = "torchani-path"
-        self.executables = ["TorchANI"]
+        self.executables = ["SEAMM_TorchANI.py"]
         self.resource_path = Path(pkg_resources.resource_filename(__name__, "data/"))
 
         # What Conda environment is the default?
@@ -64,6 +64,22 @@ class Installer(seamm_installer.InstallerBase):
         path = Path(pkg_resources.resource_filename(__name__, "data/"))
         logger.debug(f"data directory: {path}")
         self.environment_file = path / "seamm-torchani.yml"
+
+    def install(self):
+        """Install then conda environment and the Python executable."""
+        super().install()
+
+        bin_path = self.conda.path(self.environment) / "bin"
+        path = bin_path / "python"
+        local_path = self.resource_path.parent
+
+        # Copy the python file, adjusting the python path
+        lines = (local_path / "SEAMM_TorchANI.py_template").read_text().splitlines()
+        lines[0] = f"#!{path}"
+
+        new_path = bin_path / "SEAMM_TorchANI.py"
+        new_path.write_text("\n".join(lines))
+        new_path.chmod(0o755)
 
     def exe_version(self, path):
         """Get the version of the TorchANI executable.
@@ -89,12 +105,7 @@ class Installer(seamm_installer.InstallerBase):
             version = "unknown"
         else:
             version = "unknown"
-            lines = result.stdout.splitlines()
-            for line in lines:
-                line = line.strip()
-                tmp = line.split()
-                if len(tmp) == 4 and tmp[2] == "release":
-                    version = tmp[3]
-                    break
+            tmp = result.stdout.splitlines()[0].split()
+            version = tmp[-1]
 
         return version

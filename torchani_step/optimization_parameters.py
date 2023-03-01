@@ -4,13 +4,14 @@ Control parameters for the Optimization step in a SEAMM flowchart
 """
 
 import logging
+
 import seamm
-import pprint  # noqa: F401
+import torchani_step
 
 logger = logging.getLogger(__name__)
 
 
-class OptimizationParameters(seamm.Parameters):
+class OptimizationParameters(torchani_step.EnergyParameters):
     """
     The control parameters for Optimization.
 
@@ -74,14 +75,40 @@ class OptimizationParameters(seamm.Parameters):
     """
 
     parameters = {
-        "time": {
-            "default": 100.0,
-            "kind": "float",
-            "default_units": "ps",
+        "minimizer": {
+            "default": "BFGS using linesearch",
+            "kind": "enum",
+            "default_units": "",
+            "enumeration": (
+                "BFGS",
+                "LBFGS",
+                "BFGS using linesearch",
+                "LBFGS using linesearch",
+                "Gaussian Process minimizer",
+                "FIRE",
+                "MD minimizer",
+            ),
+            "format_string": "",
+            "description": "Minimizer:",
+            "help_text": "The minimization algorithm.",
+        },
+        "max steps": {
+            "default": 1000,
+            "kind": "integer",
+            "default_units": "",
             "enumeration": tuple(),
-            "format_string": ".1f",
-            "description": "Simulation time:",
-            "help_text": ("The time to simulate in the dynamics run."),
+            "format_string": "",
+            "description": "Max steps:",
+            "help_text": "The maximum number of steps to take.",
+        },
+        "convergence": {
+            "default": 0.01,
+            "kind": "float",
+            "default_units": "eV/Å",
+            "enumeration": tuple(),
+            "format_string": "",
+            "description": "Convergence:",
+            "help_text": "The convergence criteria. Maximum force on any atom.",
         },
         # # Results handling ... uncomment if needed
         # "results": {
@@ -116,5 +143,28 @@ class OptimizationParameters(seamm.Parameters):
         logger.debug("OptimizationParameters.__init__")
 
         super().__init__(
-            defaults={**OptimizationParameters.parameters, **defaults}, data=data
+            defaults={
+                **OptimizationParameters.parameters,
+                **seamm.standard_parameters.structure_handling_parameters,
+                **defaults,
+            },
+            data=data,
         )
+
+        tmp = self["system name"]
+        tmp["enumeration"] = (
+            "optimized with <Hamiltonian>",
+            "keep current name",
+            "use SMILES string",
+            "use Canonical SMILES string",
+        )
+        tmp["default"] = "keep current name"
+
+        tmp = self["configuration name"]
+        tmp["enumeration"] = (
+            "optimized with <Hamiltonian>",
+            "keep current name",
+            "use SMILES string",
+            "use Canonical SMILES string",
+        )
+        tmp["default"] = "optimized with <Hamiltonian>"

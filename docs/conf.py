@@ -46,7 +46,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx_design',
-    'sphinx_copybutton'
+    'sphinx_copybutton',
+    'sphinx.ext.todo',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -124,7 +125,7 @@ html_theme = "pydata_sphinx_theme"
 # documentation.
 # html_theme_options = {}
 html_theme_options = {
-    "github_url": "https://github.com/molssi-seamm/geometry_analysis_step",
+    "github_url": "https://github.com/molssi-seamm/torchani_step",
     "twitter_url": "https://twitter.com/MolSSI_NSF",
     "logo": {
         "image_light": "SEAMM logo.png",

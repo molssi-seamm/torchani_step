@@ -7,6 +7,9 @@ import logging
 from pathlib import Path
 import pkg_resources
 import pprint  # noqa: F401
+import textwrap
+
+from tabulate import tabulate
 
 import torchani_step
 import molsystem
@@ -85,7 +88,7 @@ class Energy(seamm.Node):
 
         super().__init__(
             flowchart=flowchart,
-            title="Energy",
+            title=title,
             extension=extension,
             module=__name__,
             logger=logger,
@@ -177,14 +180,30 @@ class Energy(seamm.Node):
         self.description = []
         self.description.append(__(self.description_text(P), **P, indent=self.indent))
 
-        # Results data
-        # data = {}
+        # Check the elements
+        parameterization = P["model"]
+        if parameterization == "ANI-1x":
+            covered_elements = {"C", "H", "N", "O"}
+        elif parameterization == "ANI-1ccx":
+            covered_elements = {"C", "H", "N", "O"}
+        elif parameterization == "ANI-2x":
+            covered_elements = {"C", "H", "N", "O", "F", "S", "Cl"}
+        else:
+            raise RuntimeError(f"Don't recognize ANI model '{parameterization}'.")
 
-        # Create the (extended) QC Schema
-        schema = {
-            "schema_name": "cms_schema_input",
-            "schema_version": 1,
-            "driver": "energy",
+        elements = set(configuration.atoms.symbols)
+        if not elements <= covered_elements:
+            raise RuntimeError(
+                f"The {parameterization} parameterization covers the "
+                f" elements {sorted(covered_elements)}. The system has "
+                f"{sorted(elements)}."
+            )
+
+        # Get the QCSchema structure for the molecule
+        schema = configuration.to_cms_schema()
+
+        # add workflow step to the schema
+        step = {
             "model": {
                 "method": "ML",
                 "model": "ANI",
@@ -196,13 +215,16 @@ class Energy(seamm.Node):
                 "version": "1.1",
                 "routine": "torchani_step.energy.get_input",
             },
+            "required results": [
+                "total energy",
+            ],
         }
 
+        results = step["required results"]
         if P["gradients"]:
-            schema["driver"] = "gradient"
+            results.append("derivatives")
 
-        # Get the QCSchema structure for the molecule
-        schema["molecule"] = configuration.to_qcschema_dict()
+        schema["workflow"] = [step]
 
         # Add other citations here or in the appropriate place in the code.
         # Add the bibtex to data/references.bib, and add a self.reference.cite
@@ -221,11 +243,61 @@ class Energy(seamm.Node):
         indent: str
             An extra indentation for the output
         """
-        printer.normal(
-            __(
-                "This is a placeholder for the results from the Energy step",
-                indent=4 * " ",
-                wrap=True,
-                dedent=False,
+        P = self.parameters.current_values_to_dict(
+            context=seamm.flowchart_variables._data
+        )
+
+        schema = kwargs["schema"]
+        step_no = kwargs["step_no"]
+
+        table = {
+            "System": [],
+            "Configuration": [],
+            "Energy": [],
+            "Std Dev": [],
+        }
+
+        have_stdev = False
+        for system in schema["systems"]:
+            system_name = system["name"]
+            for no, configuration in enumerate(system["configurations"]):
+                if no == 0:
+                    table["System"].append(system_name)
+                else:
+                    table["System"].append("")
+                table["Configuration"].append(configuration["name"])
+                results = configuration["results"]["data"][step_no]
+                table["Energy"].append(f"{results['total energy']:.6f}")
+                if "total energy, stdev" in results:
+                    table["Std Dev"].append(f"{results['total energy, stdev']:.6f}")
+                    have_stdev = True
+                else:
+                    table["Std Dev"].append("")
+
+        if not have_stdev:
+            del table["Std Dev"]
+
+        text_lines = []
+        text_lines.append("                     Results")
+        text_lines.append(
+            tabulate(
+                table,
+                headers="keys",
+                tablefmt="rounded_outline",
+                colalign=("left", "left", "decimal", "decimal"),
+                disable_numparse=True,
             )
+        )
+        text_lines.append("\n")
+
+        text = textwrap.indent("\n".join(text_lines), self.indent + 4 * " ")
+        printer.normal(text)
+
+        # Citation for the specific method
+        self.references.cite(
+            raw=self._bibliography[P["model"]],
+            alias="P['model']",
+            module="torchani_step",
+            level=2,
+            note=f"The citation for the {P['model']} ML model.",
         )

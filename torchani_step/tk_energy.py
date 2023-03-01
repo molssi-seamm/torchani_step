@@ -4,6 +4,7 @@
 
 import pprint  # noqa: F401
 import tkinter as tk
+import tkinter.ttk as ttk
 
 import torchani_step  # noqa: F401
 import seamm
@@ -91,7 +92,7 @@ class TkEnergy(seamm.TkNode):
             h=h,
         )
 
-    def create_dialog(self):
+    def create_dialog(self, title="TorchANI Energy"):
         """
         Create the dialog. A set of widgets will be chosen by default
         based on what is specified in the Energy_parameters
@@ -110,78 +111,32 @@ class TkEnergy(seamm.TkNode):
         TkEnergy.reset_dialog
         """
 
-        frame = super().create_dialog(title="Energy")
+        super().create_dialog(title=title)
 
         # Shortcut for parameters
         P = self.node.parameters
 
-        # Then create the widgets
-        for key in P:
-            if key[0] != "_" and key not in (
-                "results",
-                "extra keywords",
-                "create tables",
-            ):
-                self[key] = P[key].widget(frame)
+        # Frame to isolate widgets
+        e_frame = self["energy frame"] = ttk.LabelFrame(
+            self["frame"],
+            borderwidth=4,
+            relief="sunken",
+            text="Hamiltonian Parameters",
+            labelanchor="n",
+            padding=10,
+        )
 
-        # and lay them out
-        self.reset_dialog()
-
-    def reset_dialog(self, widget=None):
-        """Layout the widgets in the dialog.
-
-        The widgets are chosen by default from the information in
-        Energy_parameter.
-
-        This function simply lays them out row by row with
-        aligned labels. You may wish a more complicated layout that
-        is controlled by values of some of the control parameters.
-        If so, edit or override this method
-
-        Parameters
-        ----------
-        widget : Tk Widget = None
-
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        TkEnergy.create_dialog
-        """
-
-        # Remove any widgets previously packed
-        frame = self["frame"]
-        for slave in frame.grid_slaves():
-            slave.grid_forget()
-
-        # Shortcut for parameters
-        P = self.node.parameters
-
-        # keep track of the row in a variable, so that the layout is flexible
-        # if e.g. rows are skipped to control such as "method" here
-        row = 0
         widgets = []
-        for key in P:
-            if key[0] != "_" and key not in (
-                "results",
-                "extra keywords",
-                "create tables",
-            ):
-                self[key].grid(row=row, column=0, sticky=tk.EW)
-                widgets.append(self[key])
+        row = 0
+        for key in torchani_step.EnergyParameters.parameters:
+            if key not in ("results", "extra keywords", "create tables"):
+                w = self[key] = P[key].widget(e_frame)
+                w.grid(row=row, column=0, sticky=tk.EW)
+                widgets.append(w)
                 row += 1
-
-        # Align the labels
         sw.align_labels(widgets, sticky=tk.E)
 
-        # Setup the results if there are any
-        have_results = (
-            "results" in self.node.metadata and len(self.node.metadata["results"]) > 0
-        )
-        if have_results and "results" in P:
-            self.setup_results()
+        e_frame.grid(row=0, column=0)
 
     def right_click(self, event):
         """
