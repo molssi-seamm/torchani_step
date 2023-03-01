@@ -20,7 +20,7 @@ dependencies:
   - pytest-cov
 
   # Documentation
-  - pydata-sphinx-theme
+  - pydata-sphinx-theme==0.12.0
   - sphinx-design
 
   # Pip-only installs
