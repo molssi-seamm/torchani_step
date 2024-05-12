@@ -1,6 +1,9 @@
 =======
 History
 =======
+2024.5.12.1 -- Fixed problem with commandline in Docker
+    * There was a problem in the commandline for running TorchANI in a Docker container.
+      
 2024.5.12 -- Added support for Docker and for Energy Scan
     * Creating images for Docker automatically on release
     * Added the energy and gradients for output to JSON for e.g. Energy Scan

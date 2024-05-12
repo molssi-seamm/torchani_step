@@ -284,7 +284,7 @@ class TorchANI(seamm.Node):
         # Use the matching version of the seamm-torchani image by default.
         config["version"] = self.version
 
-        cmd = "{code} input.json > output.txt 2> stderr.txt"
+        cmd = ["{code}", "input.json", ">", "output.txt", "2>", "stderr.txt"]
 
         return_files = [
             "output.json",
@@ -295,7 +295,7 @@ class TorchANI(seamm.Node):
         self.logger.info(f"{cmd=}")
 
         result = executor.run(
-            cmd=[cmd],
+            cmd=cmd,
             config=config,
             directory=self.directory,
             files=files,
