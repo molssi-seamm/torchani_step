@@ -160,16 +160,32 @@ type : str
 units : str
     Optional units for the result. If present, the value should be in these units.
 """
-# metadata["results"] = {
-#     "total_energy": {
-#         "calculation": [
-#             "energy",
-#             "optimization",
-#         ],
-#         "description": "The total energy",
-#         "dimensionality": "scalar",
-#         "property": "total energy#TorchANI#{model}",
-#         "type": "float",
-#         "units": "E_h",
-#     },
-# }
+metadata["results"] = {
+    "energy": {
+        "calculation": [
+            "energy",
+            "optimization",
+        ],
+        "description": "The total energy",
+        "dimensionality": "scalar",
+        "property": "energy#TorchANI#{model}",
+        "type": "float",
+        "units": "E_h",
+    },
+    "gradients": {
+        "calculation": [
+            "energy",
+            "optimization",
+        ],
+        "description": "gradients",
+        "dimensionality": [3, "natoms"],
+        "type": "float",
+        "units": "E_h/a0",
+        "format": ".6f",
+    },
+    "model": {
+        "description": "The model string",
+        "dimensionality": "scalar",
+        "type": "string",
+    },
+}

@@ -1,7 +1,7 @@
 MODULE := torchani_step
 .PHONY: help clean clean-build clean-docs clean-pyc clean-test lint format typing test
 .PHONY: dependencies test-all coverage html docs servedocs release check-release
-.PHONY: dist install uninstall
+.PHONY: dist install uninstall image uninstall-image
 .DEFAULT_GOAL := help
 
 define BROWSER_PYSCRIPT
@@ -100,3 +100,9 @@ install: uninstall ## install the package to the active Python's site-packages
 
 uninstall: clean ## uninstall the package
 	pip uninstall --yes $(MODULE)
+
+image: uninstall-image ## Make the Docker image
+	docker image build --progress plain --file devtools/docker/Dockerfile --tag ghcr.io/molssi-seamm/seamm-torchani:latest .
+
+uninstall-image: ## Remove the docker image
+	docker image rm --force ghcr.io/molssi-seamm/seamm-torchani:latest
