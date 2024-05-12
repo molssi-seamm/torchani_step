@@ -3,11 +3,14 @@
 """Non-graphical part of the TorchANI step in a SEAMM flowchart
 """
 
+import configparser
+import importlib
 import json
 import logging
 from pathlib import Path
 import pkg_resources
 import pprint  # noqa: F401
+import shutil
 import sys
 
 import torchani_step
@@ -143,20 +146,6 @@ class TorchANI(seamm.Node):
         if parser_exists:
             return result
 
-        # Options for TorchANI
-        parser.add_argument(
-            parser_name,
-            "--torchani-path",
-            default="",
-            help="the path to the DFTB+ executable",
-        )
-        parser.add_argument(
-            parser_name,
-            "--torchani-exe",
-            default="SEAMM_TorchANI.py",
-            help="the name of the TorchANI executable of script",
-        )
-
         return result
 
     def description_text(self, P=None):
@@ -225,15 +214,7 @@ class TorchANI(seamm.Node):
         printer.important("")
 
         # Access the options and find the executable
-        options = self.options
-
-        if options["torchani_path"] == "":
-            torchani_exe = seamm_util.check_executable(options["torchani_exe"])
-        else:
-            torchani_exe = (
-                Path(options["torchani_path"]).expanduser().resolve()
-                / options["torchani_exe"]
-            )
+        seamm_options = self.global_options
 
         next_node = super().run(printer)
 
@@ -260,44 +241,90 @@ class TorchANI(seamm.Node):
         )
         files = {"input.json": input_data}
         logger.info("input.json:\n" + files["input.json"])
+        executor = self.flowchart.executor
 
-        # Output files locally
-        for filename, data in files.items():
-            path = directory / filename
-            mode = "wb" if type(data) is bytes else "w"
-            with open(path, mode) as fd:
-                fd.write(data)
+        # Read configuration file for TorchANI if it exists
+        executor_type = executor.name
+        full_config = configparser.ConfigParser()
+        ini_dir = Path(seamm_options["root"]).expanduser()
+        path = ini_dir / "torchani.ini"
 
-        local = seamm.ExecLocal()
-        result = local.run(
-            cmd=f"{torchani_exe} input.json",
+        if path.exists():
+            full_config.read(ini_dir / "torchani.ini")
+
+        # If the section we need doesn't exist, get the default
+        if not path.exists() or executor_type not in full_config:
+            resources = importlib.resources.files("torchani_step") / "data"
+            ini_text = (resources / "torchani.ini").read_text()
+            full_config.read_string(ini_text)
+
+        # Getting desperate! Look for an executable in the path
+        if executor_type not in full_config:
+            path = shutil.which("SEAMM_TorchANI.py")
+            if path is None:
+                raise RuntimeError(
+                    f"No section for '{executor_type}' in TorchANI ini file "
+                    f"({ini_dir / 'torchani.ini'}), nor in the defaults, nor "
+                    "in the path!"
+                )
+            else:
+                full_config[executor_type] = {
+                    "installation": "local",
+                    "code": str(path),
+                }
+
+        # If the ini file does not exist, write it out!
+        if not path.exists():
+            with path.open("w") as fd:
+                full_config.write(fd)
+            printer.normal(f"Wrote the TorchANI configuration file to {path}")
+            printer.normal("")
+
+        config = dict(full_config.items(executor_type))
+        # Use the matching version of the seamm-torchani image by default.
+        config["version"] = self.version
+
+        cmd = "{code} input.json > output.txt 2> stderr.txt"
+
+        return_files = [
+            "output.json",
+            "output.txt",
+            "stderr.txt",
+        ]
+
+        self.logger.info(f"{cmd=}")
+
+        result = executor.run(
+            cmd=[cmd],
+            config=config,
+            directory=self.directory,
             files=files,
-            return_files=["output.json"],
-            shell=True,
+            return_files=return_files,
             in_situ=True,
-            directory=directory,
+            shell=True,
         )
 
-        if result is None:
-            logger.error("There was an error running TorchANI")
+        if not result:
+            self.logger.error("There was an error running TorchANI")
             return None
 
         logger.debug("\n" + pprint.pformat(result))
 
         logger.info("stdout:\n" + result["stdout"])
-        if result["stderr"] != "":
-            lines = result["stderr"].splitlines()
-            tmp = []
-            for line in lines:
-                if "cuaev not installed" in line:
-                    continue
-                if "Creating a tensor from a list of numpy" in line:
-                    continue
-                if "cell = torch.tensor(self.atoms.get_cell(complete=True)" in line:
-                    continue
-                tmp.append(line)
-            if len(tmp) > 0:
-                logger.warning("stderr:\n" + "\n".join(tmp))
+        if "stderr.txt" in result and "data" in result["stderr.txt"]:
+            if result["stderr.txt"]["data"] != "":
+                lines = result["stderr.txt"]["data"].splitlines()
+                tmp = []
+                for line in lines:
+                    if "cuaev not installed" in line:
+                        continue
+                    if "Creating a tensor from a list of numpy" in line:
+                        continue
+                    if "cell = torch.tensor(self.atoms.get_cell(complete=True)" in line:
+                        continue
+                    tmp.append(line)
+                if len(tmp) > 0:
+                    logger.warning("stderr:\n" + "\n".join(tmp))
 
         lines = result["output.json"]["data"].splitlines()
         line = lines[0]

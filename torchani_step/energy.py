@@ -94,7 +94,7 @@ class Energy(seamm.Node):
             logger=logger,
         )  # yapf: disable
 
-        self._calculation = "Energy"
+        self._calculation = "energy"
         self._model = None
         self._metadata = torchani_step.metadata
         self.parameters = torchani_step.EnergyParameters()
@@ -216,13 +216,13 @@ class Energy(seamm.Node):
                 "routine": "torchani_step.energy.get_input",
             },
             "required results": [
-                "total energy",
+                "energy",
             ],
         }
 
         results = step["required results"]
         if P["gradients"]:
-            results.append("derivatives")
+            results.append("gradients")
 
         schema["workflow"] = [step]
 
@@ -247,6 +247,9 @@ class Energy(seamm.Node):
             context=seamm.flowchart_variables._data
         )
 
+        # Get the appropriate system/configuration for the new coordinates
+        system, configuration = self.get_system_configuration(P)
+
         schema = kwargs["schema"]
         step_no = kwargs["step_no"]
 
@@ -257,22 +260,38 @@ class Energy(seamm.Node):
             "Std Dev": [],
         }
 
+        # The model chemistry
+        self.model = f"ANI/{P['model']}"
+
+        # Get the appropriate system/configuration
+        system, configuration = self.get_system_configuration(P)
+
         have_stdev = False
         for system in schema["systems"]:
             system_name = system["name"]
-            for no, configuration in enumerate(system["configurations"]):
+            for no, config_data in enumerate(system["configurations"]):
                 if no == 0:
                     table["System"].append(system_name)
                 else:
                     table["System"].append("")
-                table["Configuration"].append(configuration["name"])
-                results = configuration["results"]["data"][step_no]
-                table["Energy"].append(f"{results['total energy']:.6f}")
-                if "total energy, stdev" in results:
-                    table["Std Dev"].append(f"{results['total energy, stdev']:.6f}")
+                table["Configuration"].append(config_data["name"])
+                results = config_data["results"]["data"][step_no]
+                results["model"] = "TorchANI/" + self.model
+                results["energy,units"] = "E_h"
+                results["gradients,units"] = "E_h/Å"
+
+                table["Energy"].append(f"{results['energy']:.6f}")
+                if "energy, stdev" in results:
+                    table["Std Dev"].append(f"{results['energy, stdev']:.6f}")
                     have_stdev = True
                 else:
                     table["Std Dev"].append("")
+
+                # And store results
+                self.store_results(
+                    configuration=configuration,
+                    data=results,
+                )
 
         if not have_stdev:
             del table["Std Dev"]

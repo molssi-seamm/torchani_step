@@ -138,6 +138,8 @@ class TkEnergy(seamm.TkNode):
 
         e_frame.grid(row=0, column=0)
 
+        self.setup_results()
+
     def right_click(self, event):
         """
         Handles the right click event on the node.

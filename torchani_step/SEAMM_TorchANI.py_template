@@ -13,6 +13,7 @@ import torch
 import torchani
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 atno = {
     "H": 1,
@@ -148,7 +149,7 @@ class TorchANI:
             parameterization = model_definition["parameterization"]
 
             optimize = "optimized structure" in step["required results"]
-            need_gradients = optimize or "derivatives" in step["required results"]
+            need_gradients = optimize or "gradients" in step["required results"]
 
             if parameterization == "ANI-1x":
                 torch_model = torchani.models.ANI1x(periodic_table_index=True).to(
@@ -252,22 +253,22 @@ class TorchANI:
                             results[
                                 "number of optimization steps"
                             ] = minimizer.get_number_of_steps()
-                            results["total energy"] = atoms.get_potential_energy()
+                            results["energy"] = atoms.get_potential_energy()
                             results["coordinates"] = atoms.get_positions().tolist()
-                            results["derivatives"] = atoms.get_forces().tolist()
+                            results["gradients"] = atoms.get_forces().tolist()
 
                             configuration["results"]["data"].append(results)
             else:
                 print("Calculating the single-point energy!")
                 energies = []
-                derivatives = []
+                gradients = []
                 try:
                     for i, submodel in enumerate(torch_model):
                         _, energy = submodel((species, coordinates))
                         energies.append(energy)
                         if need_gradients:
-                            derivative = torch.autograd.grad(energy.sum(), coordinates)
-                            derivatives.append(derivative)
+                            gradient = torch.autograd.grad(energy.sum(), coordinates)
+                            gradients.append(gradient)
                 except Exception as e:
                     step["success"] = False
                     step["error"] = traceback.format_exception(e)
@@ -298,30 +299,28 @@ class TorchANI:
                             dE_list = []
 
                             indx = 0
-                            for energy, derivative in zip(energies, derivatives):
+                            for energy, gradient in zip(energies, gradients):
                                 Es.append(energy[i].item())
                                 E_list[indx] = energy[i]
                                 indx += 1
                                 if need_gradients:
-                                    dEs.append(derivative[i].tolist())
-                                    dE_list.append(derivative[i])
+                                    dEs.append(gradient[i].tolist())
+                                    dE_list.append(gradient[i])
                             if need_gradients:
                                 dE_stack = torch.stack(dE_list)
 
                             E = E_list.mean().item()
                             E_stdev = E_list.std().item()
 
-                            results["all total energies"] = Es
-                            results["total energy"] = E
-                            if need_gradients:
-                                results["all derivatives"] = dEs
-                                results["total energy, stdev"] = E_stdev
+                            results["all energies"] = Es
+                            results["energy"] = E
+                            results["energy, stdev"] = E_stdev
 
                             if need_gradients:
                                 dE = dE_stack.mean(dim=0).tolist()
                                 dE_stdev = dE_stack.std(dim=0).tolist()
-                                results["derivatives"] = dE
-                                results["derivatives, stdev"] = dE_stdev
+                                results["gradients"] = dE
+                                results["gradients, stdev"] = dE_stdev
 
                             configuration["results"]["data"].append(results)
 

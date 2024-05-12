@@ -96,7 +96,7 @@ class Optimization(torchani_step.Energy):
             logger=logger,
         )
 
-        self._calculation = "Optimization"
+        self._calculation = "optimization"
         self._model = None
         self._metadata = torchani_step.metadata
         self.parameters = torchani_step.OptimizationParameters()
@@ -186,8 +186,8 @@ class Optimization(torchani_step.Energy):
         schema = super().get_input(schema)
 
         results = schema["workflow"][0]["required results"]
-        if "derivatives" not in results:
-            results.append("derivatives")
+        if "gradients" not in results:
+            results.append("gradients")
         results.append("optimized structure")
 
         schema["control parameters"] = {
@@ -252,15 +252,18 @@ class Optimization(torchani_step.Energy):
 
         results = schema["systems"][0]["configurations"][0]["results"]["data"][step_no]
 
-        energy = Q_(results["total energy"], "eV").to("Eh")
+        results["energy,units"] = "eV"
+        results["gradients,units"] = "eV/Å"
+
+        energy = Q_(results["energy"], "eV").to("Eh")
         n_steps = results["number of optimization steps"]
 
         force_units = P["convergence"].units
 
-        derivatives = results["derivatives"]
+        gradients = results["gradients"]
         max_derivative = 0
         rms = 0.0
-        for row in derivatives:
+        for row in gradients:
             sum = 0.0
             for v in row:
                 sum += v**2
@@ -268,7 +271,7 @@ class Optimization(torchani_step.Energy):
             rms += sum
             if abs(dE) > max_derivative:
                 max_derivative = abs(dE)
-        rms = Q_(math.sqrt(rms / len(derivatives)), "eV/Å").to(force_units)
+        rms = Q_(math.sqrt(rms / len(gradients)), "eV/Å").to(force_units)
         max_derivative = Q_(max_derivative, "eV/Å").to(force_units)
 
         text = ""

@@ -8,8 +8,19 @@ on:
 
 jobs:
   ci:
-    name: CI
+    name: Release
     uses: molssi-seamm/devops/.github/workflows/Release.yaml@main
     with:
       src : torchani_step
+    secrets: inherit
+
+  docker:
+    name: Docker
+    needs: release
+    uses: molssi-seamm/devops/.github/workflows/Docker.yaml@main
+    with:
+      image : molssi-seamm/seamm-torchani
+      description: TorchANI packaged for use with SEAMM or standalone
+      # Can limit platforms, e.g., linux/amd64, linux/arm64
+      # platforms: linux/amd64
     secrets: inherit
