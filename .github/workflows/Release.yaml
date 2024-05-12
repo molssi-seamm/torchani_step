@@ -7,15 +7,15 @@ on:
       - "main"
 
 jobs:
-  ci:
-    name: release
+  release:
+    name: Release
     uses: molssi-seamm/devops/.github/workflows/Release.yaml@main
     with:
       src : torchani_step
     secrets: inherit
 
   docker:
-    name: docker
+    name: Docker
     needs: release
     uses: molssi-seamm/devops/.github/workflows/Docker.yaml@main
     with:
