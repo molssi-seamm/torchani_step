@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>torchani_step.optimization_parameters &#8212; SEAMM TorchANI Plug-in 2024.5.12 documentation</title>
+    <title>torchani_step.installer &#8212; SEAMM TorchANI Plug-in 2024.5.12 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=36754332"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/torchani_step/optimization_parameters';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/torchani_step/installer';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -424,179 +424,126 @@
             
             <article class="bd-article" role="main">
               
-  <h1>Source code for torchani_step.optimization_parameters</h1><div class="highlight"><pre>
+  <h1>Source code for torchani_step.installer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Control parameters for the Optimization step in a SEAMM flowchart</span>
+
+<span class="sd">&quot;&quot;&quot;Installer for the TorchANI plug-in.</span>
+
+<span class="sd">This handles any further installation needed after installing the Python</span>
+<span class="sd">package `torchani-step`.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 
-<span class="kn">import</span> <span class="nn">seamm</span>
-<span class="kn">import</span> <span class="nn">torchani_step</span>
+<span class="kn">import</span> <span class="nn">seamm_installer</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="OptimizationParameters">
-<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.optimization_parameters.OptimizationParameters">[docs]</a>
-<span class="k">class</span> <span class="nc">OptimizationParameters</span><span class="p">(</span><span class="n">torchani_step</span><span class="o">.</span><span class="n">EnergyParameters</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The control parameters for Optimization.</span>
+<div class="viewcode-block" id="Installer">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.installer.Installer">[docs]</a>
+<span class="k">class</span> <span class="nc">Installer</span><span class="p">(</span><span class="n">seamm_installer</span><span class="o">.</span><span class="n">InstallerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle further installation needed after installing torchani-step.</span>
 
-<span class="sd">    You need to replace the &quot;time&quot; entry in dictionary below these comments with the</span>
-<span class="sd">    definitions of parameters to control this step. The keys are parameters for the</span>
-<span class="sd">    current plugin,the values are dictionaries as outlined below.</span>
+<span class="sd">    The Python package `torchani-step` should already be installed, using `pip`,</span>
+<span class="sd">    `conda`, or similar. This plug-in-specific installer then checks for the</span>
+<span class="sd">    TorchANI script, installing it if needed, and registers its</span>
+<span class="sd">    location in seamm.ini.</span>
 
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    ::</span>
+<span class="sd">    1. The correct executables are already available.</span>
+<span class="sd">        1. If they are already registered in `seamm.ini` there is nothing else</span>
+<span class="sd">           to do.</span>
+<span class="sd">        2. They may be in the current path, in which case they need to be added</span>
+<span class="sd">           to `seamm.ini`.</span>
+<span class="sd">        3. If a module system is in use, a module may need to be loaded to give</span>
+<span class="sd">           access to Dftbplus.</span>
+<span class="sd">        4. They cannot be found automatically, so the user needs to locate the</span>
+<span class="sd">           executables for the installer.</span>
 
-<span class="sd">        parameters = {</span>
-<span class="sd">            &quot;time&quot;: {</span>
-<span class="sd">                &quot;default&quot;: 100.0,</span>
-<span class="sd">                &quot;kind&quot;: &quot;float&quot;,</span>
-<span class="sd">                &quot;default_units&quot;: &quot;ps&quot;,</span>
-<span class="sd">                &quot;enumeration&quot;: tuple(),</span>
-<span class="sd">                &quot;format_string&quot;: &quot;.1f&quot;,</span>
-<span class="sd">                &quot;description&quot;: &quot;Simulation time:&quot;,</span>
-<span class="sd">                &quot;help_text&quot;: (&quot;The time to simulate in the dynamics run.&quot;)</span>
-<span class="sd">            },</span>
-<span class="sd">        }</span>
+<span class="sd">    2. TorchANI is not installed on the machine. In this case they can be</span>
+<span class="sd">       installed in a Conda environment. There is one choice:</span>
 
-<span class="sd">    parameters : {str: {str: str}}</span>
-<span class="sd">        A dictionary containing the parameters for the current step.</span>
-<span class="sd">        Each key of the dictionary is a dictionary that contains the</span>
-<span class="sd">        the following keys:</span>
-
-<span class="sd">    parameters[&quot;default&quot;] :</span>
-<span class="sd">        The default value of the parameter, used to reset it.</span>
-
-<span class="sd">    parameters[&quot;kind&quot;] : enum()</span>
-<span class="sd">        Specifies the kind of a variable. One of  &quot;integer&quot;, &quot;float&quot;, &quot;string&quot;,</span>
-<span class="sd">        &quot;boolean&quot;, or &quot;enum&quot;</span>
-
-<span class="sd">        While the &quot;kind&quot; of a variable might be a numeric value, it may still have</span>
-<span class="sd">        enumerated custom values meaningful to the user. For instance, if the parameter</span>
-<span class="sd">        is a convergence criterion for an optimizer, custom values like &quot;normal&quot;,</span>
-<span class="sd">        &quot;precise&quot;, etc, might be adequate. In addition, any parameter can be set to a</span>
-<span class="sd">        variable of expression, indicated by having &quot;$&quot; as the first character in the</span>
-<span class="sd">        field. For example, $OPTIMIZER_CONV.</span>
-
-<span class="sd">    parameters[&quot;default_units&quot;] : str</span>
-<span class="sd">        The default units, used for resetting the value.</span>
-
-<span class="sd">    parameters[&quot;enumeration&quot;]: tuple</span>
-<span class="sd">        A tuple of enumerated values.</span>
-
-<span class="sd">    parameters[&quot;format_string&quot;]: str</span>
-<span class="sd">        A format string for &quot;pretty&quot; output.</span>
-
-<span class="sd">    parameters[&quot;description&quot;]: str</span>
-<span class="sd">        A short string used as a prompt in the GUI.</span>
-
-<span class="sd">    parameters[&quot;help_text&quot;]: str</span>
-<span class="sd">        A longer string to display as help for the user.</span>
-
-<span class="sd">    See Also</span>
-<span class="sd">    --------</span>
-<span class="sd">    Optimization, TkOptimization, Optimization OptimizationParameters, OptimizationStep</span>
+<span class="sd">        1. They can be installed in a separate environment, `seamm-torchani` by</span>
+<span class="sd">           default.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;minimizer&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;BFGS using linesearch&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s2">&quot;BFGS&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;LBFGS&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;BFGS using linesearch&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;LBFGS using linesearch&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Gaussian Process minimizer&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;FIRE&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;MD minimizer&quot;</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Minimizer:&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="s2">&quot;The minimization algorithm.&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;max steps&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
-            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Max steps:&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="s2">&quot;The maximum number of steps to take.&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="s2">&quot;convergence&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
-            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;eV/Å&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
-            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Convergence:&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="s2">&quot;The convergence criteria. Maximum force on any atom.&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="c1"># # Results handling ... uncomment if needed</span>
-        <span class="c1"># &quot;results&quot;: {</span>
-        <span class="c1">#     &quot;default&quot;: {},</span>
-        <span class="c1">#     &quot;kind&quot;: &quot;dictionary&quot;,</span>
-        <span class="c1">#     &quot;default_units&quot;: &quot;&quot;,</span>
-        <span class="c1">#     &quot;enumeration&quot;: tuple(),</span>
-        <span class="c1">#     &quot;format_string&quot;: &quot;&quot;,</span>
-        <span class="c1">#     &quot;description&quot;: &quot;results&quot;,</span>
-        <span class="c1">#     &quot;help_text&quot;: &quot;The results to save to variables or in tables.&quot;,</span>
-        <span class="c1"># },</span>
-    <span class="p">}</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">):</span>
+        <span class="c1"># Call the base class initialization, which sets up the commandline</span>
+        <span class="c1"># parser, amongst other things.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the parameters, by default with the parameters defined above</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing the TorchANI installer object.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="s2">&quot;torchani-step&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_name</span> <span class="o">=</span> <span class="s2">&quot;torchani-path&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SEAMM_TorchANI.py&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;data/&quot;</span><span class="p">))</span>
+
+        <span class="c1"># What Conda environment is the default?</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;conda-environment&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;conda-environment&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;conda-environment&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;seamm-torchani&quot;</span>
+
+        <span class="c1"># The environment.yaml file for Conda installations.</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s2">&quot;data/&quot;</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;data directory: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment_file</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;seamm-torchani.yml&quot;</span>
+
+<div class="viewcode-block" id="Installer.install">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.installer.Installer.install">[docs]</a>
+    <span class="k">def</span> <span class="nf">install</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Install then conda environment and the Python executable.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+
+        <span class="n">bin_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conda</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;bin&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">bin_path</span> <span class="o">/</span> <span class="s2">&quot;python&quot;</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_path</span><span class="o">.</span><span class="n">parent</span>
+
+        <span class="c1"># Copy the python file, adjusting the python path</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">(</span><span class="n">local_path</span> <span class="o">/</span> <span class="s2">&quot;SEAMM_TorchANI.py_template&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;#!</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">new_path</span> <span class="o">=</span> <span class="n">bin_path</span> <span class="o">/</span> <span class="s2">&quot;SEAMM_TorchANI.py&quot;</span>
+        <span class="n">new_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+        <span class="n">new_path</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o755</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Installer.exe_version">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.installer.Installer.exe_version">[docs]</a>
+    <span class="k">def</span> <span class="nf">exe_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the version of the TorchANI executable.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        defaults: dict</span>
-<span class="sd">            A dictionary of parameters to initialize. The parameters</span>
-<span class="sd">            above are used first and any given will override/add to them.</span>
-<span class="sd">        data: dict</span>
-<span class="sd">            A dictionary of keys and a subdictionary with value and units</span>
-<span class="sd">            for updating the current, default values.</span>
+<span class="sd">        path : pathlib.Path</span>
+<span class="sd">            Path to the executable.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        str</span>
+<span class="sd">            The version reported by the executable, or &#39;unknown&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s2">&quot;--version&quot;</span><span class="p">],</span>
+                <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;OptimizationParameters.__init__&quot;</span><span class="p">)</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
-                <span class="o">**</span><span class="n">OptimizationParameters</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">seamm</span><span class="o">.</span><span class="n">standard_parameters</span><span class="o">.</span><span class="n">structure_handling_parameters</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">defaults</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;system name&quot;</span><span class="p">]</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;enumeration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;keep current name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use SMILES string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use Canonical SMILES string&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keep current name&quot;</span>
-
-        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;configuration name&quot;</span><span class="p">]</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;enumeration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;keep current name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use SMILES string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use Canonical SMILES string&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span></div>
+        <span class="k">return</span> <span class="n">version</span></div>
+</div>
 
 </pre></div>
 

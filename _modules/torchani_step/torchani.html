@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>torchani_step.torchani &#8212; SEAMM TorchANI Plug-in 2023.2.28 documentation</title>
+    <title>torchani_step.torchani &#8212; SEAMM TorchANI Plug-in 2024.5.12 documentation</title>
   
   
   
@@ -25,24 +24,21 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
-    <script src="../../_static/design-tabs.js"></script>
+    <script src="../../_static/documentation_options.js?v=36cc12c0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/torchani_step/torchani';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -434,11 +430,14 @@
 <span class="sd">&quot;&quot;&quot;Non-graphical part of the TorchANI step in a SEAMM flowchart</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">configparser</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">pkg_resources</span>
 <span class="kn">import</span> <span class="nn">pprint</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="kn">import</span> <span class="nn">torchani_step</span>
@@ -468,7 +467,9 @@
     <span class="n">molsystem</span><span class="o">.</span><span class="n">add_properties_from_file</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TorchANI"><a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI">[docs]</a><span class="k">class</span> <span class="nc">TorchANI</span><span class="p">(</span><span class="n">seamm</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+<div class="viewcode-block" id="TorchANI">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI">[docs]</a>
+<span class="k">class</span> <span class="nc">TorchANI</span><span class="p">(</span><span class="n">seamm</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The non-graphical part of a TorchANI step in a flowchart.</span>
 
@@ -550,7 +551,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The git version of this module.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">torchani_step</span><span class="o">.</span><span class="n">__git_revision__</span>
 
-<div class="viewcode-block" id="TorchANI.set_id"><a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.set_id">[docs]</a>    <span class="k">def</span> <span class="nf">set_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
+<div class="viewcode-block" id="TorchANI.set_id">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.set_id">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the id for node to a given tuple&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_id</span> <span class="o">=</span> <span class="n">node_id</span>
 
@@ -559,7 +562,10 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="TorchANI.create_parser"><a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.create_parser">[docs]</a>    <span class="k">def</span> <span class="nf">create_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TorchANI.create_parser">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.create_parser">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup the command-line / config file parser&quot;&quot;&quot;</span>
         <span class="n">parser_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span>
         <span class="n">parser</span> <span class="o">=</span> <span class="n">seamm_util</span><span class="o">.</span><span class="n">getParser</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;SEAMM&quot;</span><span class="p">)</span>
@@ -574,23 +580,12 @@
         <span class="k">if</span> <span class="n">parser_exists</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span>
 
-        <span class="c1"># Options for TorchANI</span>
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--torchani-path&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;the path to the DFTB+ executable&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="n">parser_name</span><span class="p">,</span>
-            <span class="s2">&quot;--torchani-exe&quot;</span><span class="p">,</span>
-            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;SEAMM_TorchANI.py&quot;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;the name of the TorchANI executable of script&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
         <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="TorchANI.description_text"><a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.description_text">[docs]</a>    <span class="k">def</span> <span class="nf">description_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TorchANI.description_text">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.description_text">[docs]</a>
+    <span class="k">def</span> <span class="nf">description_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the text description of what this step will do.</span>
 <span class="sd">        The dictionary of control values is passed in as P so that</span>
 <span class="sd">        the code can test values, etc.</span>
@@ -635,7 +630,10 @@
 
         <span class="k">return</span> <span class="n">text</span></div>
 
-<div class="viewcode-block" id="TorchANI.run"><a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TorchANI.run">
+<a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.torchani.TorchANI.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a TorchANI step.</span>
 
 <span class="sd">        Parameters</span>
@@ -656,15 +654,7 @@
         <span class="n">printer</span><span class="o">.</span><span class="n">important</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="c1"># Access the options and find the executable</span>
-        <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
-
-        <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;torchani_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-            <span class="n">torchani_exe</span> <span class="o">=</span> <span class="n">seamm_util</span><span class="o">.</span><span class="n">check_executable</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;torchani_exe&quot;</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">torchani_exe</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">Path</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;torchani_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-                <span class="o">/</span> <span class="n">options</span><span class="p">[</span><span class="s2">&quot;torchani_exe&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
+        <span class="n">seamm_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_options</span>
 
         <span class="n">next_node</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">printer</span><span class="p">)</span>
 
@@ -691,44 +681,90 @@
         <span class="p">)</span>
         <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;input.json&quot;</span><span class="p">:</span> <span class="n">input_data</span><span class="p">}</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;input.json:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">files</span><span class="p">[</span><span class="s2">&quot;input.json&quot;</span><span class="p">])</span>
+        <span class="n">executor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flowchart</span><span class="o">.</span><span class="n">executor</span>
 
-        <span class="c1"># Output files locally</span>
-        <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="n">filename</span>
-            <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;wb&quot;</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bytes</span> <span class="k">else</span> <span class="s2">&quot;w&quot;</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="c1"># Read configuration file for TorchANI if it exists</span>
+        <span class="n">executor_type</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">full_config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">ini_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">seamm_options</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">ini_dir</span> <span class="o">/</span> <span class="s2">&quot;torchani.ini&quot;</span>
 
-        <span class="n">local</span> <span class="o">=</span> <span class="n">seamm</span><span class="o">.</span><span class="n">ExecLocal</span><span class="p">()</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">local</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">cmd</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">torchani_exe</span><span class="si">}</span><span class="s2"> input.json&quot;</span><span class="p">,</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">full_config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">ini_dir</span> <span class="o">/</span> <span class="s2">&quot;torchani.ini&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If the section we need doesn&#39;t exist, get the default</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">executor_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">full_config</span><span class="p">:</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;torchani_step&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span>
+            <span class="n">ini_text</span> <span class="o">=</span> <span class="p">(</span><span class="n">resources</span> <span class="o">/</span> <span class="s2">&quot;torchani.ini&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+            <span class="n">full_config</span><span class="o">.</span><span class="n">read_string</span><span class="p">(</span><span class="n">ini_text</span><span class="p">)</span>
+
+        <span class="c1"># Getting desperate! Look for an executable in the path</span>
+        <span class="k">if</span> <span class="n">executor_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">full_config</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;SEAMM_TorchANI.py&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No section for &#39;</span><span class="si">{</span><span class="n">executor_type</span><span class="si">}</span><span class="s2">&#39; in TorchANI ini file &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">ini_dir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">&#39;torchani.ini&#39;</span><span class="si">}</span><span class="s2">), nor in the defaults, nor &quot;</span>
+                    <span class="s2">&quot;in the path!&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">full_config</span><span class="p">[</span><span class="n">executor_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;installation&quot;</span><span class="p">:</span> <span class="s2">&quot;local&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                <span class="p">}</span>
+
+        <span class="c1"># If the ini file does not exist, write it out!</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                <span class="n">full_config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote the TorchANI configuration file to </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">full_config</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">executor_type</span><span class="p">))</span>
+        <span class="c1"># Use the matching version of the seamm-torchani image by default.</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{code}</span><span class="s2"> input.json &gt; output.txt 2&gt; stderr.txt&quot;</span>
+
+        <span class="n">return_files</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;output.json&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;output.txt&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;stderr.txt&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cmd</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="n">cmd</span><span class="o">=</span><span class="p">[</span><span class="n">cmd</span><span class="p">],</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span>
             <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
-            <span class="n">return_files</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;output.json&quot;</span><span class="p">],</span>
-            <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_files</span><span class="o">=</span><span class="n">return_files</span><span class="p">,</span>
             <span class="n">in_situ</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+            <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;There was an error running TorchANI&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;There was an error running TorchANI&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;stdout:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;stdout&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;stderr&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-            <span class="n">lines</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;stderr&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s2">&quot;cuaev not installed&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="k">if</span> <span class="s2">&quot;Creating a tensor from a list of numpy&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="k">if</span> <span class="s2">&quot;cell = torch.tensor(self.atoms.get_cell(complete=True)&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;stderr:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s2">&quot;stderr.txt&quot;</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">and</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;stderr.txt&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;stderr.txt&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;stderr.txt&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;cuaev not installed&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="s2">&quot;Creating a tensor from a list of numpy&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="s2">&quot;cell = torch.tensor(self.atoms.get_cell(complete=True)&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;stderr:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
 
         <span class="n">lines</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;output.json&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
         <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -782,7 +818,9 @@
             <span class="n">note</span><span class="o">=</span><span class="s2">&quot;The citation for the ANI dataset.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">next_node</span></div></div>
+        <span class="k">return</span> <span class="n">next_node</span></div>
+</div>
+
 </pre></div>
 
             </article>
