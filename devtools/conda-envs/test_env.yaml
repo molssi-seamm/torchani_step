@@ -10,6 +10,7 @@ dependencies:
 
   # SEAMM
   - seamm
+  - seamm-installer
   - tabulate
 
   # Testing
