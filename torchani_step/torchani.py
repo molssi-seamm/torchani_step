@@ -209,14 +209,14 @@ class TorchANI(seamm.Node):
         directory = Path(self.directory)
         directory.mkdir(parents=True, exist_ok=True)
 
+        next_node = super().run(printer)
+
         # Print our header to the main output
         printer.important(self.header)
         printer.important("")
 
         # Access the options and find the executable
         seamm_options = self.global_options
-
-        next_node = super().run(printer)
 
         # Get the first real node
         node1 = self.subflowchart.get_node("1").next()

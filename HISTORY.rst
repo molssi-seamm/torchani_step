@@ -1,6 +1,10 @@
 =======
 History
 =======
+2024.10.15 -- Bugfix: error if used in a loop and previous directories deleted.
+   * The code crashed if called with a loop in the flowchart, and the last directory of
+     a previous loop iteration was deleted before running the next iteration.
+
 2024.5.12.1 -- Fixed problem with commandline in Docker
     * There was a problem in the commandline for running TorchANI in a Docker container.
       
