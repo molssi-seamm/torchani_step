@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>History &#8212; SEAMM TorchANI Plug-in 2024.5.12.1 documentation</title>
+    <title>History &#8212; SEAMM TorchANI Plug-in 2024.10.15 documentation</title>
   
   
   
@@ -27,19 +27,19 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=c224919a" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="_static/documentation_options.js?v=0f71c243"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=7e0f9259"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'history';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -429,6 +429,11 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading">¶</a></h1>
 <dl class="simple">
+<dt>2024.10.15 – Bugfix: error if used in a loop and previous directories deleted.</dt><dd><ul class="simple">
+<li><p>The code crashed if called with a loop in the flowchart, and the last directory of
+a previous loop iteration was deleted before running the next iteration.</p></li>
+</ul>
+</dd>
 <dt>2024.5.12.1 – Fixed problem with commandline in Docker</dt><dd><ul class="simple">
 <li><p>There was a problem in the commandline for running TorchANI in a Docker container.</p></li>
 </ul>
