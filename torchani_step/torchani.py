@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Non-graphical part of the TorchANI step in a SEAMM flowchart
-"""
+"""Non-graphical part of the TorchANI step in a SEAMM flowchart"""
 
 import configparser
 import importlib

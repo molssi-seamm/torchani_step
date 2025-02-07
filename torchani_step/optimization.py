@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Non-graphical part of the Optimization step in a TorchANI flowchart
-"""
+"""Non-graphical part of the Optimization step in a TorchANI flowchart"""
 
 import logging
 import math
