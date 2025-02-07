@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Non-graphical part of the Energy step in a TorchANI flowchart
-"""
+"""Non-graphical part of the Energy step in a TorchANI flowchart"""
 
 import logging
 from pathlib import Path
@@ -248,7 +247,7 @@ class Energy(seamm.Node):
         )
 
         # Get the appropriate system/configuration for the new coordinates
-        system, configuration = self.get_system_configuration(P)
+        system, configuration = self.get_system_configuration(None)
 
         schema = kwargs["schema"]
         step_no = kwargs["step_no"]
@@ -262,9 +261,6 @@ class Energy(seamm.Node):
 
         # The model chemistry
         self.model = f"ANI/{P['model']}"
-
-        # Get the appropriate system/configuration
-        system, configuration = self.get_system_configuration(P)
 
         have_stdev = False
         for system in schema["systems"]:

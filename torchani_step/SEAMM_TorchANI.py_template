@@ -319,8 +319,8 @@ class TorchANI:
                             if need_gradients:
                                 dE = dE_stack.mean(dim=0).tolist()
                                 dE_stdev = dE_stack.std(dim=0).tolist()
-                                results["gradients"] = dE
-                                results["gradients, stdev"] = dE_stdev
+                                results["gradients"] = dE[0]
+                                results["gradients, stdev"] = dE_stdev[0]
 
                             configuration["results"]["data"].append(results)
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Non-graphical part of the TorchANI step in a SEAMM flowchart
-"""
+"""Non-graphical part of the TorchANI step in a SEAMM flowchart"""
 
 import configparser
 import importlib
@@ -174,7 +173,9 @@ class TorchANI(seamm.Node):
                 text += __(node.description_text(), indent=3 * " ").__str__()
             except Exception as e:
                 print(f"Error describing torchani flowchart: {e} in {node}")
-                logger.critical(f"Error describing torchani flowchart: {e} in {node}")
+                self.logger.critical(
+                    f"Error describing torchani flowchart: {e} in {node}"
+                )
                 raise
             except:  # noqa: E722
                 print(
@@ -182,7 +183,7 @@ class TorchANI(seamm.Node):
                         sys.exc_info()[0], str(node)
                     )
                 )
-                logger.critical(
+                self.logger.critical(
                     "Unexpected error describing torchani flowchart: {} in {}".format(
                         sys.exc_info()[0], str(node)
                     )
@@ -240,7 +241,7 @@ class TorchANI(seamm.Node):
             schema, indent=4, cls=CompactJSONEncoder, sort_keys=True
         )
         files = {"input.json": input_data}
-        logger.info("input.json:\n" + files["input.json"])
+        self.logger.debug("input.json:\n" + files["input.json"])
         executor = self.flowchart.executor
 
         # Read configuration file for TorchANI if it exists
@@ -292,7 +293,7 @@ class TorchANI(seamm.Node):
             "stderr.txt",
         ]
 
-        self.logger.info(f"{cmd=}")
+        self.logger.debug(f"{cmd=}")
 
         result = executor.run(
             cmd=cmd,
@@ -308,9 +309,9 @@ class TorchANI(seamm.Node):
             self.logger.error("There was an error running TorchANI")
             return None
 
-        logger.debug("\n" + pprint.pformat(result))
+        self.logger.debug("\n" + pprint.pformat(result))
 
-        logger.info("stdout:\n" + result["stdout"])
+        self.logger.debug("stdout:\n" + result["stdout"])
         if "stderr.txt" in result and "data" in result["stderr.txt"]:
             if result["stderr.txt"]["data"] != "":
                 lines = result["stderr.txt"]["data"].splitlines()
@@ -324,7 +325,7 @@ class TorchANI(seamm.Node):
                         continue
                     tmp.append(line)
                 if len(tmp) > 0:
-                    logger.warning("stderr:\n" + "\n".join(tmp))
+                    self.logger.warning("stderr:\n" + "\n".join(tmp))
 
         lines = result["output.json"]["data"].splitlines()
         line = lines[0]

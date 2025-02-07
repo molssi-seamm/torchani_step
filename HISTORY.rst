@@ -1,6 +1,12 @@
 =======
 History
 =======
+2024.2.7 -- Bugfix: handling of configurations and gradients
+    * The code handled configurations incorrectly.This has been fixed.
+    * The gradients were not output correctly, causing problems in e.g the Structure
+      and Thermochemistry steps.
+    * Changed logging at the INFO level to DEBUG to clean up the output of geomeTRIC.
+	
 2024.10.15 -- Bugfix: error if used in a loop and previous directories deleted.
    * The code crashed if called with a loop in the flowchart, and the last directory of
      a previous loop iteration was deleted before running the next iteration.
