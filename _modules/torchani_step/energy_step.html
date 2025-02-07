@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>torchani_step.energy_step &#8212; SEAMM TorchANI Plug-in 2024.10.15 documentation</title>
+    <title>torchani_step.energy_step &#8212; SEAMM TorchANI Plug-in 2025.2.7 documentation</title>
   
   
   
@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=c224919a" />
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=7e0f9259"></script>
+    <script src="../../_static/documentation_options.js?v=12f87f1d"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -427,12 +427,12 @@
   <h1>Source code for torchani_step.energy_step</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="kn">import</span> <span class="nn">torchani_step</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchani_step</span>
 
 
 <div class="viewcode-block" id="EnergyStep">
 <a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.energy_step.EnergyStep">[docs]</a>
-<span class="k">class</span> <span class="nc">EnergyStep</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnergyStep</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper class needed for the stevedore integration.</span>
 
 <span class="sd">    This must provide a `description()` method that returns a dict containing a</span>
@@ -466,7 +466,7 @@
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Energy&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flowchart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gui</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flowchart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gui</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize this helper class, which is used by</span>
 <span class="sd">        the application via stevedore to get information about</span>
 <span class="sd">        and create node objects for the flowchart</span>
@@ -475,7 +475,7 @@
 
 <div class="viewcode-block" id="EnergyStep.create_node">
 <a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.energy_step.EnergyStep.create_node">[docs]</a>
-    <span class="k">def</span> <span class="nf">create_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flowchart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flowchart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create and return the new node object.</span>
 
 <span class="sd">        Parameters</span>
@@ -499,7 +499,7 @@
 
 <div class="viewcode-block" id="EnergyStep.create_tk_node">
 <a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.energy_step.EnergyStep.create_tk_node">[docs]</a>
-    <span class="k">def</span> <span class="nf">create_tk_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">canvas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_tk_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">canvas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create and return the graphical Tk node object.</span>
 
 <span class="sd">        Parameters</span>
@@ -522,7 +522,7 @@
 
 <div class="viewcode-block" id="EnergyStep.description">
 <a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.energy_step.EnergyStep.description">[docs]</a>
-    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a description of what this step does.</span>
 
 <span class="sd">        Returns</span>
