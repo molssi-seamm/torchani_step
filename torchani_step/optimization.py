@@ -9,10 +9,12 @@ import pkg_resources
 import pprint  # noqa: F401
 import textwrap
 
+import numpy as np
 from tabulate import tabulate
 
 import torchani_step
 import molsystem
+from molsystem import RMSD
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
 import seamm_util.printing as printing
@@ -204,7 +206,9 @@ class Optimization(torchani_step.Energy):
 
         return schema
 
-    def analyze(self, indent="", schema=None, table=None, step_no=None, **kwargs):
+    def analyze(
+        self, indent="", schema=None, table=None, step_no=None, data={}, **kwargs
+    ):
         """Do any analysis of the output from this step.
 
         Also print important results to the local step.out file using
@@ -237,6 +241,7 @@ class Optimization(torchani_step.Energy):
             )
             return
 
+        text = ""
         if not schema["workflow"][0]["success"]:
             text = "The Optimization step failed. There is no output at all!"
             printer.normal(__(text, indent=4 * " ", wrap=True, dedent=False))
@@ -256,6 +261,9 @@ class Optimization(torchani_step.Energy):
 
         energy = Q_(results["energy"], "eV").to("Eh")
         n_steps = results["number of optimization steps"]
+        data["model"] = P["model"]
+        data["energy"] = energy.magnitude
+        data["N steps optimization"] = n_steps
 
         force_units = P["convergence"].units
 
@@ -273,7 +281,9 @@ class Optimization(torchani_step.Energy):
         rms = Q_(math.sqrt(rms / len(gradients)), "eV/Å").to(force_units)
         max_derivative = Q_(max_derivative, "eV/Å").to(force_units)
 
-        text = ""
+        data["maximum force"] = max_derivative.m_as("E_h/Å")
+        data["RMS force"] = rms.m_as("E_h/Å")
+
         if table is None:
             table = {
                 "Property": [],
@@ -281,7 +291,9 @@ class Optimization(torchani_step.Energy):
                 "Units": [],
             }
 
-        text = "The optimization converged."
+        table["Property"].append("Converged?")
+        table["Value"].append("True")
+        table["Units"].append("")
 
         table["Property"].append("Steps")
         table["Value"].append(n_steps)
@@ -298,6 +310,55 @@ class Optimization(torchani_step.Energy):
         table["Property"].append("RMS Force")
         table["Value"].append(f"{rms.magnitude:.4f}")
         table["Units"].append(str(rms.units))
+
+        # Get the appropriate system/configuration for the new coordinates
+        _, starting_configuration = self.get_system_configuration()
+        initial = starting_configuration.to_RDKMol()
+        system, configuration = self.get_system_configuration(P)
+        update_structure = P["structure handling"] != "Discard the structure"
+
+        final = starting_configuration.to_RDKMol()
+        final.GetConformer(0).SetPositions(np.array(results["coordinates"]))
+
+        result = RMSD(final, initial, symmetry=True, include_h=True)
+        data["RMSD with H"] = result["RMSD"]
+        data["displaced atom with H"] = result["displaced atom"]
+        data["maximum displacement with H"] = result["maximum displacement"]
+
+        # Align the structure
+        if update_structure:
+            configuration.from_RDKMol(final)
+            # And the name of the configuration.
+            text += seamm.standard_parameters.set_names(
+                system,
+                configuration,
+                P,
+                _first=True,
+                model=P["model"],
+            )
+
+        result = RMSD(final, initial, symmetry=True)
+        data["RMSD"] = result["RMSD"]
+        data["displaced atom"] = result["displaced atom"]
+        data["maximum displacement"] = result["maximum displacement"]
+
+        if "RMSD" in data:
+            tmp = data["RMSD"]
+            table["Property"].append("RMSD in Geometry")
+            table["Value"].append(f"{tmp:.2f}")
+            table["Units"].append("Å")
+
+        if "maximum displacement" in data:
+            tmp = data["maximum displacement"]
+            table["Property"].append("Largest Displacement")
+            table["Value"].append(f"{tmp:.2f}")
+            table["Units"].append("Å")
+
+        if "displaced atom" in data:
+            tmp = data["displaced atom"]
+            table["Property"].append("Displaced Atom")
+            table["Value"].append(f"{tmp + 1}")
+            table["Units"].append("")
 
         tmp = tabulate(
             table,
@@ -317,22 +378,11 @@ class Optimization(torchani_step.Energy):
         text += textwrap.indent("\n".join(text_lines), self.indent + 7 * " ")
         printer.normal(text)
 
-        # Get the appropriate system/configuration for the new coordinates
-        system, configuration = self.get_system_configuration(P)
-
-        if P["system name"] == "optimized with <Hamiltonian>":
-            system.name = f"optimized with {P['model']}"
-        if P["configuration name"] == "optimized with <Hamiltonian>":
-            configuration.name = f"optimized with {P['model']}"
-
-        configuration.atoms.set_coordinates(results["coordinates"])
-
-        text = (
-            f"\nThe optimized structure has been placed in {system.name}/"
-            f"{configuration.name}"
+        # Put any requested results into variables or tables
+        self.store_results(
+            configuration=configuration,
+            data=data,
         )
-
-        printer.normal(__(text, indent=self.indent + 4 * " "))
 
         # Citation for the specific method
         self.references.cite(

@@ -3,20 +3,26 @@
 """Non-graphical part of the TorchANI step in a SEAMM flowchart"""
 
 import configparser
+import csv
+from datetime import datetime, timezone
 import importlib
 import json
 import logging
 from pathlib import Path
 import pkg_resources
+import platform
 import pprint  # noqa: F401
 import shutil
 import sys
+import time
+
+from cpuinfo import get_cpu_info
 
 import torchani_step
 import molsystem
 import seamm
 import seamm_util
-from seamm_util import ureg, Q_, CompactJSONEncoder  # noqa: F401
+from seamm_util import ureg, units_class, Q_, CompactJSONEncoder  # noqa: F401
 import seamm_util.printing as printing
 from seamm_util.printing import FormattedText as __
 
@@ -110,6 +116,47 @@ class TorchANI(seamm.Node):
 
         self._metadata = torchani_step.metadata
         self.parameters = torchani_step.TorchANIParameters()
+
+        # Set up the timing information
+        self._timing_data = []
+        self._timing_path = Path("~/.seamm.d/timing/torchani.csv").expanduser()
+        self._timing_header = [
+            "node",  # 0
+            "cpu",  # 1
+            "cpu_version",  # 2
+            "cpu_count",  # 3
+            "cpu_speed",  # 4
+            "date",  # 5
+            "H_SMILES",  # 6
+            "ISOMERIC_SMILES",  # 7
+            "formula",  # 8
+            "net_charge",  # 9
+            "spin_multiplicity",  # 10
+            "keywords",  # 11
+            "nproc",  # 12
+            "time",  # 13
+        ]
+        try:
+            self._timing_path.parent.mkdir(parents=True, exist_ok=True)
+
+            self._timing_data = 14 * [""]
+            self._timing_data[0] = platform.node()
+            tmp = get_cpu_info()
+            if "arch" in tmp:
+                self._timing_data[1] = tmp["arch"]
+            if "cpuinfo_version_string" in tmp:
+                self._timing_data[2] = tmp["cpuinfo_version_string"]
+            if "count" in tmp:
+                self._timing_data[3] = str(tmp["count"])
+            if "hz_advertized_friendly" in tmp:
+                self._timing_data[4] = tmp["hz_advertized_friendly"]
+
+            if not self._timing_path.exists():
+                with self._timing_path.open("w", newline="") as fd:
+                    writer = csv.writer(fd)
+                    writer.writerow(self._timing_header)
+        except Exception:
+            self._timing_data = None
 
     @property
     def version(self):
@@ -212,6 +259,8 @@ class TorchANI(seamm.Node):
 
         next_node = super().run(printer)
 
+        system, configuration = self.get_system_configuration()
+
         # Print our header to the main output
         printer.important(self.header)
         printer.important("")
@@ -226,9 +275,24 @@ class TorchANI(seamm.Node):
         schema = {}
         node = node1
         nodes = []
+        control = []
         while node is not None:
             nodes.append(node)
             schema = node.get_input(schema)
+
+            # For the timing data, get the parameters used
+            Pnode = node.parameters.current_values_to_dict(
+                context=seamm.flowchart_variables._data
+            )
+
+            tmp = []
+            for key, value in Pnode.items():
+                if isinstance(value, units_class):
+                    tmp.append((key, f"{value:~P}"))
+                else:
+                    tmp.append((key, value))
+            control.append(tmp)
+
             for value in node.description:
                 printer.important(value)
                 printer.important(" ")
@@ -295,6 +359,34 @@ class TorchANI(seamm.Node):
 
         self.logger.debug(f"{cmd=}")
 
+        if self._timing_data is not None:
+            try:
+                self._timing_data[6] = configuration.to_smiles(
+                    canonical=True, hydrogens=True
+                )
+            except Exception:
+                self._timing_data[6] = ""
+            try:
+                self._timing_data[7] = configuration.isomeric_smiles
+            except Exception:
+                self._timing_data[7] = ""
+            try:
+                self._timing_data[8] = configuration.formula[0]
+            except Exception:
+                self._timing_data[7] = ""
+            try:
+                self._timing_data[9] = str(configuration.charge)
+            except Exception:
+                self._timing_data[9] = ""
+            try:
+                self._timing_data[10] = str(configuration.spin_multiplicity)
+            except Exception:
+                self._timing_data[10] = ""
+            self._timing_data[11] = json.dumps(control)
+            self._timing_data[5] = datetime.now(timezone.utc).isoformat()
+
+        t0 = time.time_ns()
+
         result = executor.run(
             cmd=cmd,
             config=config,
@@ -304,6 +396,17 @@ class TorchANI(seamm.Node):
             in_situ=True,
             shell=True,
         )
+
+        t = (time.time_ns() - t0) / 1.0e9
+        if self._timing_data is not None:
+            self._timing_data[13] = f"{t:.3f}"
+            self._timing_data[12] = "1"
+            try:
+                with self._timing_path.open("a", newline="") as fd:
+                    writer = csv.writer(fd)
+                    writer.writerow(self._timing_data)
+            except Exception:
+                pass
 
         if not result:
             self.logger.error("There was an error running TorchANI")

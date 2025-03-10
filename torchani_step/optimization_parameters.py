@@ -110,16 +110,16 @@ class OptimizationParameters(torchani_step.EnergyParameters):
             "description": "Convergence:",
             "help_text": "The convergence criteria. Maximum force on any atom.",
         },
-        # # Results handling ... uncomment if needed
-        # "results": {
-        #     "default": {},
-        #     "kind": "dictionary",
-        #     "default_units": "",
-        #     "enumeration": tuple(),
-        #     "format_string": "",
-        #     "description": "results",
-        #     "help_text": "The results to save to variables or in tables.",
-        # },
+        # Results handling ... uncomment if needed
+        "results": {
+            "default": {},
+            "kind": "dictionary",
+            "default_units": "",
+            "enumeration": tuple(),
+            "format_string": "",
+            "description": "results",
+            "help_text": "The results to save to variables or in tables.",
+        },
     }
 
     def __init__(self, defaults={}, data=None):
@@ -151,20 +151,14 @@ class OptimizationParameters(torchani_step.EnergyParameters):
             data=data,
         )
 
+        # Do any local editing of defaults
+        tmp = self["structure handling"]
+        tmp.description = "Structure handling:"
+
         tmp = self["system name"]
-        tmp["enumeration"] = (
-            "optimized with <Hamiltonian>",
-            "keep current name",
-            "use SMILES string",
-            "use Canonical SMILES string",
-        )
-        tmp["default"] = "keep current name"
+        tmp._data["enumeration"] = (*tmp.enumeration, "optimized with {model}")
+        tmp.default = "keep current name"
 
         tmp = self["configuration name"]
-        tmp["enumeration"] = (
-            "optimized with <Hamiltonian>",
-            "keep current name",
-            "use SMILES string",
-            "use Canonical SMILES string",
-        )
-        tmp["default"] = "optimized with <Hamiltonian>"
+        tmp._data["enumeration"] = ["optimized with {model}", *tmp.enumeration]
+        tmp.default = "optimized with {model}"
