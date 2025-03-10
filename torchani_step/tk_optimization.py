@@ -126,7 +126,7 @@ class TkOptimization(torchani_step.TkEnergy):
         )
 
         for key in torchani_step.OptimizationParameters.parameters:
-            if key not in ("structure handling", "configuration name"):
+            if key not in ("results",):
                 self[key] = P[key].widget(opt_frame)
 
         for key in ("minimizer",):

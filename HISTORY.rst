@@ -1,6 +1,12 @@
 =======
 History
 =======
+2024.3.10 -- Added RMSD for optimization and timing information
+    * Added the RMSD between the initial and final structure for optimization.
+    * Generally improved the output.
+    * Added more properti4es to results that can be saved.
+    * Updated installation to work with latest SEAMM installer.
+      
 2024.2.7 -- Bugfix: handling of configurations and gradients
     * The code handled configurations incorrectly.This has been fixed.
     * The gradients were not output correctly, causing problems in e.g the Structure

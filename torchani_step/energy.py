@@ -231,7 +231,7 @@ class Energy(seamm.Node):
 
         return schema
 
-    def analyze(self, indent="", **kwargs):
+    def analyze(self, indent="", data={}, **kwargs):
         """Do any analysis of the output from this step.
 
         Also print important results to the local step.out file using

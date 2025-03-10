@@ -48,6 +48,7 @@ class Installer(seamm_installer.InstallerBase):
 
         logger.debug("Initializing the TorchANI installer object.")
 
+        self.environment = "seamm-dftbplus"
         self.section = "torchani-step"
         self.path_name = "torchani-path"
         self.executables = ["SEAMM_TorchANI.py"]
@@ -71,7 +72,7 @@ class Installer(seamm_installer.InstallerBase):
 
         bin_path = self.conda.path(self.environment) / "bin"
         path = bin_path / "python"
-        local_path = self.resource_path.parent
+        local_path = self.resource_path
 
         # Copy the python file, adjusting the python path
         lines = (local_path / "SEAMM_TorchANI.py_template").read_text().splitlines()

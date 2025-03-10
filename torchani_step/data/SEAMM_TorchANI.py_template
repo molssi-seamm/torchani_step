@@ -205,7 +205,7 @@ class TorchANI:
                     configuration["symbols"], positions=coords["coordinates"]
                 )
                 calculator = torch_model.ase()
-                atoms.set_calculator(calculator)
+                atoms.calc = calculator
                 parameters = schema["control parameters"]["optimization"]
                 minimizer = parameters["minimizer"]
                 if minimizer == "BFGS":
@@ -250,9 +250,9 @@ class TorchANI:
                                     "data": [],
                                 }
                             results = {}
-                            results[
-                                "number of optimization steps"
-                            ] = minimizer.get_number_of_steps()
+                            results["number of optimization steps"] = (
+                                minimizer.get_number_of_steps()
+                            )
                             results["energy"] = atoms.get_potential_energy()
                             results["coordinates"] = atoms.get_positions().tolist()
                             results["gradients"] = atoms.get_forces().tolist()
