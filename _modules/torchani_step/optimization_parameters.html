@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>torchani_step.optimization_parameters &#8212; SEAMM TorchANI Plug-in 2025.2.7 documentation</title>
+    <title>torchani_step.optimization_parameters &#8212; SEAMM TorchANI Plug-in 2025.3.10 documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=12f87f1d"></script>
+    <script src="../../_static/documentation_options.js?v=bdc3789c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -539,16 +539,16 @@
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Convergence:&quot;</span><span class="p">,</span>
             <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="s2">&quot;The convergence criteria. Maximum force on any atom.&quot;</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="c1"># # Results handling ... uncomment if needed</span>
-        <span class="c1"># &quot;results&quot;: {</span>
-        <span class="c1">#     &quot;default&quot;: {},</span>
-        <span class="c1">#     &quot;kind&quot;: &quot;dictionary&quot;,</span>
-        <span class="c1">#     &quot;default_units&quot;: &quot;&quot;,</span>
-        <span class="c1">#     &quot;enumeration&quot;: tuple(),</span>
-        <span class="c1">#     &quot;format_string&quot;: &quot;&quot;,</span>
-        <span class="c1">#     &quot;description&quot;: &quot;results&quot;,</span>
-        <span class="c1">#     &quot;help_text&quot;: &quot;The results to save to variables or in tables.&quot;,</span>
-        <span class="c1"># },</span>
+        <span class="c1"># Results handling ... uncomment if needed</span>
+        <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;dictionary&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_units&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enumeration&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span>
+            <span class="s2">&quot;format_string&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;results&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help_text&quot;</span><span class="p">:</span> <span class="s2">&quot;The results to save to variables or in tables.&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
     <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{},</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -580,23 +580,17 @@
             <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># Do any local editing of defaults</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;structure handling&quot;</span><span class="p">]</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;Structure handling:&quot;</span>
+
         <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;system name&quot;</span><span class="p">]</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;enumeration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;keep current name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use SMILES string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use Canonical SMILES string&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keep current name&quot;</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="s2">&quot;enumeration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">tmp</span><span class="o">.</span><span class="n">enumeration</span><span class="p">,</span> <span class="s2">&quot;optimized with </span><span class="si">{model}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="s2">&quot;keep current name&quot;</span>
 
         <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;configuration name&quot;</span><span class="p">]</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;enumeration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;keep current name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use SMILES string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;use Canonical SMILES string&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span></div>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="s2">&quot;enumeration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;optimized with </span><span class="si">{model}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">tmp</span><span class="o">.</span><span class="n">enumeration</span><span class="p">]</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="s2">&quot;optimized with </span><span class="si">{model}</span><span class="s2">&quot;</span></div>
 
 </pre></div>
 

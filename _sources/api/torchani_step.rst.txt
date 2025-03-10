@@ -9,117 +9,117 @@ torchani\_step.energy module
 
 .. automodule:: torchani_step.energy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.energy\_parameters module
 ----------------------------------------
 
 .. automodule:: torchani_step.energy_parameters
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.energy\_step module
 ----------------------------------
 
 .. automodule:: torchani_step.energy_step
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.installer module
 -------------------------------
 
 .. automodule:: torchani_step.installer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.metadata module
 ------------------------------
 
 .. automodule:: torchani_step.metadata
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.optimization module
 ----------------------------------
 
 .. automodule:: torchani_step.optimization
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.optimization\_parameters module
 ----------------------------------------------
 
 .. automodule:: torchani_step.optimization_parameters
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.optimization\_step module
 ----------------------------------------
 
 .. automodule:: torchani_step.optimization_step
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.tk\_energy module
 --------------------------------
 
 .. automodule:: torchani_step.tk_energy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.tk\_optimization module
 --------------------------------------
 
 .. automodule:: torchani_step.tk_optimization
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.tk\_torchani module
 ----------------------------------
 
 .. automodule:: torchani_step.tk_torchani
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.torchani module
 ------------------------------
 
 .. automodule:: torchani_step.torchani
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.torchani\_parameters module
 ------------------------------------------
 
 .. automodule:: torchani_step.torchani_parameters
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 torchani\_step.torchani\_step module
 ------------------------------------
 
 .. automodule:: torchani_step.torchani_step
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: torchani_step
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

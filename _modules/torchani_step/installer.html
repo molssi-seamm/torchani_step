@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>torchani_step.installer &#8212; SEAMM TorchANI Plug-in 2025.2.7 documentation</title>
+    <title>torchani_step.installer &#8212; SEAMM TorchANI Plug-in 2025.3.10 documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=12f87f1d"></script>
+    <script src="../../_static/documentation_options.js?v=bdc3789c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -477,6 +477,7 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing the TorchANI installer object.&quot;</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="s2">&quot;seamm-dftbplus&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="s2">&quot;torchani-step&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path_name</span> <span class="o">=</span> <span class="s2">&quot;torchani-path&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">executables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SEAMM_TorchANI.py&quot;</span><span class="p">]</span>
@@ -502,7 +503,7 @@
 
         <span class="n">bin_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conda</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;bin&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">bin_path</span> <span class="o">/</span> <span class="s2">&quot;python&quot;</span>
-        <span class="n">local_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_path</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_path</span>
 
         <span class="c1"># Copy the python file, adjusting the python path</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">(</span><span class="n">local_path</span> <span class="o">/</span> <span class="s2">&quot;SEAMM_TorchANI.py_template&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>

@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>torchani_step.optimization &#8212; SEAMM TorchANI Plug-in 2025.2.7 documentation</title>
+    <title>torchani_step.optimization &#8212; SEAMM TorchANI Plug-in 2025.3.10 documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=12f87f1d"></script>
+    <script src="../../_static/documentation_options.js?v=bdc3789c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -436,10 +436,12 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pprint</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torchani_step</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">molsystem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">molsystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">RMSD</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seamm_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">ureg</span><span class="p">,</span> <span class="n">Q_</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seamm_util.printing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">printing</span>
@@ -641,7 +643,9 @@
 
 <div class="viewcode-block" id="Optimization.analyze">
 <a class="viewcode-back" href="../../api/torchani_step.html#torchani_step.optimization.Optimization.analyze">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step_no</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step_no</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Do any analysis of the output from this step.</span>
 
 <span class="sd">        Also print important results to the local step.out file using</span>
@@ -674,6 +678,7 @@
             <span class="p">)</span>
             <span class="k">return</span>
 
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">schema</span><span class="p">[</span><span class="s2">&quot;workflow&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
             <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The Optimization step failed. There is no output at all!&quot;</span>
             <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">wrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dedent</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
@@ -693,6 +698,9 @@
 
         <span class="n">energy</span> <span class="o">=</span> <span class="n">Q_</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">],</span> <span class="s2">&quot;eV&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;Eh&quot;</span><span class="p">)</span>
         <span class="n">n_steps</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;number of optimization steps&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span><span class="o">.</span><span class="n">magnitude</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;N steps optimization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_steps</span>
 
         <span class="n">force_units</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;convergence&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">units</span>
 
@@ -710,7 +718,9 @@
         <span class="n">rms</span> <span class="o">=</span> <span class="n">Q_</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rms</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">gradients</span><span class="p">)),</span> <span class="s2">&quot;eV/Å&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">force_units</span><span class="p">)</span>
         <span class="n">max_derivative</span> <span class="o">=</span> <span class="n">Q_</span><span class="p">(</span><span class="n">max_derivative</span><span class="p">,</span> <span class="s2">&quot;eV/Å&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">force_units</span><span class="p">)</span>
 
-        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;maximum force&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_derivative</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;E_h/Å&quot;</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;RMS force&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rms</span><span class="o">.</span><span class="n">m_as</span><span class="p">(</span><span class="s2">&quot;E_h/Å&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">table</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;Property&quot;</span><span class="p">:</span> <span class="p">[],</span>
@@ -718,7 +728,9 @@
                 <span class="s2">&quot;Units&quot;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="p">}</span>
 
-        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The optimization converged.&quot;</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Converged?&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">)</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Units&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Steps&quot;</span><span class="p">)</span>
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_steps</span><span class="p">)</span>
@@ -735,6 +747,55 @@
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;RMS Force&quot;</span><span class="p">)</span>
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">rms</span><span class="o">.</span><span class="n">magnitude</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Units&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rms</span><span class="o">.</span><span class="n">units</span><span class="p">))</span>
+
+        <span class="c1"># Get the appropriate system/configuration for the new coordinates</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">starting_configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">()</span>
+        <span class="n">initial</span> <span class="o">=</span> <span class="n">starting_configuration</span><span class="o">.</span><span class="n">to_RDKMol</span><span class="p">()</span>
+        <span class="n">system</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="n">update_structure</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;structure handling&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Discard the structure&quot;</span>
+
+        <span class="n">final</span> <span class="o">=</span> <span class="n">starting_configuration</span><span class="o">.</span><span class="n">to_RDKMol</span><span class="p">()</span>
+        <span class="n">final</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">SetPositions</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;coordinates&quot;</span><span class="p">]))</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">RMSD</span><span class="p">(</span><span class="n">final</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_h</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;RMSD with H&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;RMSD&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;displaced atom with H&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;displaced atom&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;maximum displacement with H&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;maximum displacement&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Align the structure</span>
+        <span class="k">if</span> <span class="n">update_structure</span><span class="p">:</span>
+            <span class="n">configuration</span><span class="o">.</span><span class="n">from_RDKMol</span><span class="p">(</span><span class="n">final</span><span class="p">)</span>
+            <span class="c1"># And the name of the configuration.</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="n">seamm</span><span class="o">.</span><span class="n">standard_parameters</span><span class="o">.</span><span class="n">set_names</span><span class="p">(</span>
+                <span class="n">system</span><span class="p">,</span>
+                <span class="n">configuration</span><span class="p">,</span>
+                <span class="n">P</span><span class="p">,</span>
+                <span class="n">_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">P</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">RMSD</span><span class="p">(</span><span class="n">final</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;RMSD&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;RMSD&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;displaced atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;displaced atom&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;maximum displacement&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;maximum displacement&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;RMSD&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;RMSD&quot;</span><span class="p">]</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;RMSD in Geometry&quot;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Units&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Å&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;maximum displacement&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;maximum displacement&quot;</span><span class="p">]</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Largest Displacement&quot;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Units&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Å&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;displaced atom&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;displaced atom&quot;</span><span class="p">]</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Property&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Displaced Atom&quot;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;Units&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="n">tmp</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span>
             <span class="n">table</span><span class="p">,</span>
@@ -754,22 +815,11 @@
         <span class="n">text</span> <span class="o">+=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text_lines</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
         <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
-        <span class="c1"># Get the appropriate system/configuration for the new coordinates</span>
-        <span class="n">system</span><span class="p">,</span> <span class="n">configuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_system_configuration</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;system name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span><span class="p">:</span>
-            <span class="n">system</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;optimized with </span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="n">P</span><span class="p">[</span><span class="s2">&quot;configuration name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;optimized with &lt;Hamiltonian&gt;&quot;</span><span class="p">:</span>
-            <span class="n">configuration</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;optimized with </span><span class="si">{</span><span class="n">P</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-
-        <span class="n">configuration</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">set_coordinates</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;coordinates&quot;</span><span class="p">])</span>
-
-        <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">The optimized structure has been placed in </span><span class="si">{</span><span class="n">system</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="c1"># Put any requested results into variables or tables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_results</span><span class="p">(</span>
+            <span class="n">configuration</span><span class="o">=</span><span class="n">configuration</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
         <span class="p">)</span>
-
-        <span class="n">printer</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">__</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="s2">&quot; &quot;</span><span class="p">))</span>
 
         <span class="c1"># Citation for the specific method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">references</span><span class="o">.</span><span class="n">cite</span><span class="p">(</span>
