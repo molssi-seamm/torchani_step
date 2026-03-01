@@ -1,6 +1,8 @@
 =======
 History
 =======
+2026.3.1 -- Internal: switching from deprecated library pkg_resources to importlib
+
 2024.3.10 -- Added RMSD for optimization and timing information
     * Added the RMSD between the initial and final structure for optimization.
     * Generally improved the output.

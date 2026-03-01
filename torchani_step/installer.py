@@ -6,9 +6,8 @@ This handles any further installation needed after installing the Python
 package `torchani-step`.
 """
 
+import importlib
 import logging
-from pathlib import Path
-import pkg_resources
 import subprocess
 
 import seamm_installer
@@ -52,7 +51,8 @@ class Installer(seamm_installer.InstallerBase):
         self.section = "torchani-step"
         self.path_name = "torchani-path"
         self.executables = ["SEAMM_TorchANI.py"]
-        self.resource_path = Path(pkg_resources.resource_filename(__name__, "data/"))
+
+        self.resource_path = importlib.resources.files("torchani_step") / "data"
 
         # What Conda environment is the default?
         data = self.configuration.get_values(self.section)
@@ -62,9 +62,7 @@ class Installer(seamm_installer.InstallerBase):
             self.environment = "seamm-torchani"
 
         # The environment.yaml file for Conda installations.
-        path = Path(pkg_resources.resource_filename(__name__, "data/"))
-        logger.debug(f"data directory: {path}")
-        self.environment_file = path / "seamm-torchani.yml"
+        self.environment_file = self.resource_path / "seamm-torchani.yml"
 
     def install(self):
         """Install then conda environment and the Python executable."""
