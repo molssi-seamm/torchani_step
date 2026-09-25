@@ -1,7 +1,13 @@
 =======
 History
 =======
-2026.3.1 -- Internal: switching from deprecated library pkg_resources to importlib
+2026.9.25 -- Bugfix: the TorchANI step failed to load on Python 3.12 outside conda
+    * The step used the deprecated ``pkg_resources`` module, which is only present
+      when setuptools is installed. Conda installs setuptools into every
+      environment, but a plain venv does not, so there the step failed to import
+      with ``No module named 'pkg_resources'`` and was missing from the flowchart
+      editor. It now uses ``importlib.resources``. (This change was made in March
+      2026 but never released.)
 
 2024.3.10 -- Added RMSD for optimization and timing information
     * Added the RMSD between the initial and final structure for optimization.
