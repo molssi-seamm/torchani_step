@@ -345,8 +345,6 @@ class TorchANI(seamm.Node):
             printer.normal("")
 
         config = dict(full_config.items(executor_type))
-        # Use the matching version of the seamm-torchani image by default.
-        config["version"] = self.version
 
         cmd = ["{code}", "input.json", ">", "output.txt", "2>", "stderr.txt"]
 

@@ -8,6 +8,8 @@ History
       with ``No module named 'pkg_resources'`` and was missing from the flowchart
       editor. It now uses ``importlib.resources``. (This change was made in March
       2026 but never released.)
+    * Removed the Docker image (and its recipe and release job) and the Docker settings
+      in the default torchani.ini, which were no longer used or maintained.
 
 2024.3.10 -- Added RMSD for optimization and timing information
     * Added the RMSD between the initial and final structure for optimization.
