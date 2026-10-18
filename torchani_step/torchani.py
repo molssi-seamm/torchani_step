@@ -412,9 +412,13 @@ class TorchANI(seamm.Node):
         self.logger.debug("\n" + pprint.pformat(result))
 
         self.logger.debug("stdout:\n" + result["stdout"])
-        if "stderr.txt" in result and "data" in result["stderr.txt"]:
-            if result["stderr.txt"]["data"] != "":
-                lines = result["stderr.txt"]["data"].splitlines()
+        # The executor leaves the returned files on disk
+        directory = Path(self.directory)
+        path = directory / "stderr.txt"
+        if path.exists():
+            stderr = path.read_text(errors="replace")
+            if stderr != "":
+                lines = stderr.splitlines()
                 tmp = []
                 for line in lines:
                     if "cuaev not installed" in line:
@@ -427,7 +431,7 @@ class TorchANI(seamm.Node):
                 if len(tmp) > 0:
                     self.logger.warning("stderr:\n" + "\n".join(tmp))
 
-        lines = result["output.json"]["data"].splitlines()
+        lines = (directory / "output.json").read_text().splitlines()
         line = lines[0]
         if line[0:7] != "!MolSSI":
             raise RuntimeError(

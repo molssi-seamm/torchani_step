@@ -1,6 +1,13 @@
 =======
 History
 =======
+2026.10.18 -- Internal: read the output files from disk
+    * seamm-exec 2026.10.18 no longer reads the files a calculation returns into memory,
+      since they can be gigabytes. The TorchANI step now reads the ones it needs from
+      the step's directory, which works with earlier versions of seamm-exec too.
+    * The Docker image, its recipe and its release job are removed: Docker is no longer
+      supported, and the image was not used.
+
 2026.9.25 -- Bugfix: the TorchANI step failed to load on Python 3.12 outside conda
     * The step used the deprecated ``pkg_resources`` module, which is only present
       when setuptools is installed. Conda installs setuptools into every
